@@ -1,19 +1,36 @@
+--- Live-state PASS/FAIL smoke tests (bound to a key via pd3.Init).
+---@class pd3.SelfTest
 local SelfTest = {}
+
 local Log = require("pd3lib.core.log")
 local Safe = require("pd3lib.core.safe")
 local World = require("pd3lib.core.world")
 local Hooks = require("pd3lib.core.hooks")
 local Timers = require("pd3lib.core.timers")
+local Maps = require("pd3lib.core.maps")
+local Reflect = require("pd3lib.core.reflect")
 local Entities = require("pd3lib.game.entities")
 local Interact = require("pd3lib.game.interact")
 local Shield = require("pd3lib.game.shield")
+local Challenge = require("pd3lib.game.challenge")
+local Mission = require("pd3lib.game.mission")
 
 local ExtraChecks = {}
 
+--- One registered check.
+---@class pd3.SelfTest.Check
+---@field Name string
+---@field Fn fun(): boolean?, string? # returns ok, info; ok=false marks FAIL
+
+--- Registers an extra check. Fn returning false (or raising) counts as FAIL.
+---@param Name string
+---@param Fn fun(): boolean?, string?
 function SelfTest.Add(Name, Fn)
     ExtraChecks[#ExtraChecks + 1] = { Name = Name, Fn = Fn }
 end
 
+--- The built-in checks (world accessors, finders, interactor, hooks, timers, maps, reflect).
+---@return pd3.SelfTest.Check[] checks
 local function DefaultChecks()
     return {
         {
@@ -88,9 +105,67 @@ local function DefaultChecks()
                 return Shield.AIInstigatorUnsupported == true, "AI instigator marked unsupported"
             end,
         },
+        {
+            Name = "safe.Resolve/String",
+            Fn = function()
+                local OkFind, Statics = pcall(StaticFindObject, "/Script/Engine.Default__GameplayStatics")
+                if not OkFind or not Safe.IsValid(Statics) then return false, "GameplayStatics not found" end
+                local Resolved = Safe.Resolve(Statics:GetFName())
+                local Text = Safe.String(Statics:GetFName())
+                return type(Resolved) == "string" and type(Text) == "string", Text
+            end,
+        },
+        {
+            Name = "maps.Size/ForEach (challenge map)",
+            Fn = function()
+                local Map = Challenge.Achievements()
+                if Map == nil then return true, "no challenge manager in this context" end
+                local Count = 0
+                local Ok = Maps.ForEach(Map, function() Count = Count + 1 end)
+                return Ok, string.format("size=%s iterated=%d", tostring(Maps.Size(Map)), Count)
+            end,
+        },
+        {
+            Name = "challenge status names",
+            Fn = function()
+                return Challenge.StatusName(Challenge.CompletedStatus) == "COMPLETED", "COMPLETED==2"
+            end,
+        },
+        {
+            Name = "safe.ToFName",
+            Fn = function()
+                local OkFind, Statics = pcall(StaticFindObject, "/Script/Engine.Default__GameplayStatics")
+                if not OkFind or not Safe.IsValid(Statics) then return false, "GameplayStatics not found" end
+                local Text = Safe.String(Statics:GetFName())
+                local Name, Index = Safe.ToFName(Text)
+                return Name ~= nil and type(Index) == "number" and Index > 0,
+                    string.format("%s idx=%s", Text, tostring(Index))
+            end,
+        },
+        {
+            Name = "reflect.DumpProperties",
+            Fn = function()
+                local OkFind, Statics = pcall(StaticFindObject, "/Script/Engine.Default__GameplayStatics")
+                if not OkFind or not Safe.IsValid(Statics) then return false, "GameplayStatics not found" end
+                local Lines = Reflect.DumpProperties(Statics, { MaxLines = 6, MaxArray = 2 })
+                return #Lines > 0, string.format("%d lines, first=%s", #Lines, tostring(Lines[1]))
+            end,
+        },
+        {
+            Name = "mission state (info)",
+            Fn = function()
+                local State = Mission.Get()
+                if State == nil then return true, "no live mission (menu)" end
+                local Difficulty, Name = Mission.Difficulty(State)
+                return true, string.format("difficulty=%s heistRef=%s", tostring(Name), tostring(Mission.HeistRef(State)))
+            end,
+        },
     }
 end
 
+--- Runs the built-in checks plus SelfTest.Add checks, logging PASS/FAIL lines.
+---@return integer passed
+---@return integer failed
 function SelfTest.Run()
     Log.Info("=== pd3lib selftest ===")
 

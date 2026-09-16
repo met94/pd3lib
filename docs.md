@@ -2,7 +2,7 @@
 
 Lua helper library for Payday 3 UE4SS mods. Split into `core` (generic UE4SS/UE helpers) and `game` (Payday 3 specific systems), plus a `selftest`.
 
-Version: 1
+Version: 2
 
 ## Install
 
@@ -45,9 +45,29 @@ pd3.Unload() -- unhooks everything; keybind removal only if UE4SS supports it
 
 All helpers swallow errors via `pcall`; they never raise.
 
+### core.safe (value resolution)
+- `Resolve(value)` — unwraps UE4SS value wrappers: `RemoteUnrealParam`/`LocalUnrealParam` via `:get()`; `FString`/`FName`/`FText`/`FGuid` via `:ToString()` (returns a Lua string); UObject derivatives pass through unchanged (`GetFullName` guard); depth-capped to avoid wrapper loops.
+- `String(value)` — `Resolve` then `tostring` for primitives, `Describe` fallback.
+- `ArrayCount(value)` — `#`, then `GetArrayNum`, else nil (`TrivialObject` arrays support neither).
+- `ToFName(text)` -> `FName` userdata, `index` — pre-builds FNames for UFunction arguments (see hazards: Lua string -> FName marshalling crashed this build). Returns nil if the name is not in the pool.
+
+### core.maps
+- `Size(map)`, `Find(map, key)`, `Contains(map, key)`
+- `ForEach(map, fn)` — `fn(key, value)`; keys are resolved, callback errors logged per element.
+- **This UE4SS build**: TMap callbacks must not return a value — a non-nil return aborts iteration with `attempt to call a nil value`. Early-stop is therefore unavailable; count/skip inside the closure. `pairs()` never works on TMaps.
+
+### core.reflect
+Introspection-driven dumpers that keep working across game updates (no hardcoded offsets).
+- `SetDefaults{ MaxDepth=1, MaxArray=25, MaxString=200, MaxLines=400, Skip={ ModeArray, ModeDataArray } }` — per-call `opts` override, `MaxArray/MaxString/MaxLines = 0` mean unlimited.
+- `DumpProperties(target, opts)` — all reflected properties with values + type tags; `opts.Filter` = name substring; truncation is always logged.
+- `DumpStruct(value, structNameOrObject, opts)` — struct fields via its `UScriptStruct` (e.g. `"SBZChallengeData"`, `"SBZStatisticCriteriaData"`, `"SBZEndMissionResultData"`, `"SBZInternalStatData"`).
+- `DumpClass(nameOrPath, opts)`, `DumpEnum(nameOrObject, opts)`, `PropertiesOf(target)`, `FunctionsOf(struct)`, `FindStruct(nameOrPath)`, `Format(value, opts, depth, property)`.
+- Safe defaults: known-freeze props skipped, arrays capped, output budgeted, everything pcall'd.
+
 ### core.world
 - `GetPlayerController()`, `GetPawn()`, `GetPlayerState()`, `GetWorld()`, `GetLevelName()`
 - `FindAll(className)` (safe `FindAllOf`, always returns a table)
+- `FindLive(className)` — first non-`Default__` valid instance (plus full name)
 - `Distance(a, b)` (actors or vectors)
 - `ActorsInPath(pathSubstring, aroundActor, maxDistance)` — iterates all actors, filters by class path substring, sorts by distance
 - `HasAuthority(actor)`, `Owner(actor)`
@@ -95,6 +115,24 @@ Hook callbacks run wrapped in `pcall`; callback errors are logged, not fatal.
 - `InstigatorState(pawn)`, `StateName(value)`, `VictimFlags(victim)`
 - `AIInstigatorUnsupported = true` — do not attempt AI-driven human shields; see below
 
+### game.challenge
+Challenge / achievement access.
+- `Manager()`, `AchievementManager()` — live instances (`Default__` CDO skipped)
+- `Achievements(manager)`, `AllChallenges(manager)` — the `AchievementMap` / `ChallengeMap` TMaps
+- `StatusNames`, `StatusName(v)` — `0 INIT`, `1 INPROGRESS`, `2 COMPLETED`, `3 UNAVAILABLE`; `CompletedStatus = 2`
+- `Find(manager, needle)` — summaries (key/id/name/status/progress) whose id, name or key contains `needle`
+- `IsCompleted(manager, needle)` -> `ok, summary`
+- `CodeFor(challengeName)` — challenge FName -> AccelByte code (e.g. `ACH_*`) via the settings CDO property
+- `Complete(achievementId)` — calls `SBZAchievementManager:CompleteAchievement(id)`
+
+### game.mission
+Mission state snapshot.
+- `Get()` — live `SBZMissionState`
+- `Difficulty(state)` -> `value, name`; `DifficultyNames`
+- `HeistData(state)`, `HeistRef(state)` — heist token such as `penthouse`
+- `Escape(state)` -> `{ TimeLeft, PlayersIn, PlayersRequired }`
+- `Criterion(name)` — e.g. `Criterion("InsurancePolicy")`; nil outside a mission
+
 ## Payday 3 knowledge base
 
 ### Authority / topology
@@ -121,11 +159,50 @@ Human shield grab for the player: `modeIndex` = interactor's `ModeIndex` (observ
 - Release: cancel the granted ability instance via `K2_CancelAbility` (objects found with `FindAllOf`, skipping `Default__`).
 - **AI instigator crashes the game.** With a crew `SBZAIInteractorComponent` and `modeIndex = 1`, the interaction starts and completes, then the engine crashes before `SlotReached`. Player pawn has the same zero `HumanShieldSlotParameters`, so this is a code-level assumption (player-only instigator path), not missing data. Never trigger it.
 
+### UE4SS Lua data-type pitfalls
+- Property/param values arrive as wrappers; unwrap with `pd3.safe.Resolve` or `pd3.safe.String`:
+  - `FString` / `FName` / `FText` / `FGuid` -> `:ToString()`
+  - `RemoteUnrealParam` / `LocalUnrealParam` -> `:get()`
+  - UObject derivatives -> keep as-is; `Describe`/`GetFullName` works directly.
+  - Unwrapped names otherwise print as `FString: 0x...`, `FNameUserdata: 0x...`.
+- `pairs()` does not work on `TMap`; use `:ForEach` (see `core.maps`). A callback that returns a value aborts iteration in this build.
+- Arrays of structs can come back as opaque `TrivialObject` wrappers with no `#` and no `GetArrayNum` (e.g. `SBZAchievementManager.CompletedChallenges`). Read status through the challenge/achievement maps instead.
+- Lua strings are accepted where `FName`/`FString` parameters are expected; conversion is automatic.
+- Hook callback parameters are wrappers too; resolve before logging (resolved ints/bools stay opaque — no `:get()` value access for value types).
+
+### Achievements and challenges
+- `BP_ChallengeManager_C` (subclass of `USBZChallengeManager`) and `SBZAchievementManager` live on `PD3_GameInstance_C` (transient engine objects), findable with `FindAllOf` (skip `Default__`). `game.challenge` wraps this.
+- `AchievementMap` (TMap<FName, FSBZChallengeData>) keys are hashed FNames; `ChallengeName` is human-readable, e.g. `Achievement Steam Penthouse Human Shield Extract`.
+- `SBZChallengeToAchievementSettings` (CDO at `/Script/Starbreeze.Default__SBZChallengeToAchievementSettings`) maps challenge FName -> AccelByte code (`ACH_PH_HUMAN_SHIELD_EXTRACT`). Platform variants (Steam/XBox/PlayStation/Epic) share one AccelByte code but have distinct hashed keys.
+- Completion: `SBZAchievementManager:CompleteAchievement(FName)` — accepts the map key or the `ACH_*` code (try both; verify via map status flipping to `COMPLETED(2)`). Fallback lever: `AchievementWriteCallbackProxy:WriteAchievementProgress`.
+- Native criteria live in `SBZStatisticCriteriaData` assets (`/Game/Gameplay/Data/StatisticData/DA_*`, e.g. `DA_InsurancePolicy`): `StatisticCode` is a kebab-case stat id (`penthouse-human-shield-extract`), `LowestDifficulty`, `MinPassableState`/`MaxPassableState`, `HeistDataArray`. Live read: `pd3.mission.Criterion("InsurancePolicy")` (a copy exists on `SBZMissionState.StatisticsCriteriaDataCollection`).
+- Achievements are evaluated server/backend side from stats; there is no client-side criteria re-check, so a forced `CompleteAchievement` call bypasses the stat requirement entirely (persistence depends on the backend accepting the client write).
+
+### Mission, difficulty, escape
+- `SBZMissionState.Difficulty` — `0 Normal`, `1 Hard`, `2 VeryHard`, `3 Overkill`.
+- `CurrentHeistData:GetHeistReferenceText()` -> heist token (`penthouse`); the *level* name (`Sky` for Touch The Sky) is different — gate on the heist ref, not the level.
+- `EscapeTimeLeft`, `PlayersInEscapeVolume`, `PlayersRequiredInEscapeVolume`; `Multicast_SetEscapeVolumeData(PlayersIn, Total)` fires on changes. Escape volumes are `ASBZPlayerEscapeVolume : ASBZPlayerTriggerVolume : ATriggerVolume` (`EncompassesPoint` usable).
+
+### Reflection dumping (game update workflow)
+- After a patch, re-discover instead of trusting old field names:
+  1. `pd3.reflect.DumpProperties(liveObject, { Filter = "..." })` for objects (class + function lists via `DumpClass`).
+  2. `pd3.reflect.DumpStruct(value, "StructName")` for records — struct names drop the `F` prefix: `FSBZChallengeData` -> `SBZChallengeData`, `FSBZEndMissionResultData` -> `SBZEndMissionResultData`.
+  3. `pd3.reflect.DumpEnum("EnumName")` for enums.
+- Curated dumpers built on it: `pd3.challenge.DumpRecord/DumpStatMap/DumpCaches`, `pd3.mission.DumpCriterion/DumpHeistData/DumpMissionResult`; `InsurancePolicyMod` binds `F9` to a combined reflection dump.
+- Output is budgeted and truncation is logged (`MaxArray/MaxLines/MaxDepth/MaxString`, `0` = unlimited); known-freeze properties are skipped by default.
+
+### Session vs platform state
+- Forced achievement unlocks do not flip local `ChallengeMap` status mid-session: `unlock postcheck: unlocked=false` right after a successful unlock is expected. The platform UI (Steam/console) is authoritative; map status refreshes after re-login/backend resync.
+
 ### Other hazards
 - `FindAllOf` needs the exact short class name; blueprint classes end with `_C` (the package/asset name does not work).
 - `FindAllOf("Actor")` is heavy — filter by class path substring and distance; prefer the per-class lists in `game.entities`.
 - Hook value parameters (ints/bools) arrive as opaque `RemoteUnrealParam` — their values are not readable via Lua.
 - Inside hook callbacks, property reads on the context object were observed returning `nil`; read state with your own helpers instead.
+- `SBZChallengeManager:GetStatProgress(statId)` froze the game thread (same hazard class as `ModeArray`). Do not call it; read criteria assets/stat codes instead.
+- UFunction getters that return `TMap`/`TArray` **by value** (`SBZChallengeToAchievementSettings:GetChallengeToAchievementSettings`, `GetAchievementObjectiveStatCodeArray`) are suspect: one F2 probe ended in an engine crash right after such calls. Read the backing UPROPERTY instead.
+- **Hook callbacks**: never call UFunctions (or rich converters that may call them) from inside a hook pre-callback. Calling a UFunction you also hook re-enters your own callback; this crashed UE4SS in `push_nameproperty` (null name-property deref). Defer work with `pd3.timers.After/InGameThread`, or unhook first. Hook params are wrappers: only `Safe.Resolve/String` (which uses `:get()`/`:ToString()` exclusively) are safe on them.
+- `Safe.Resolve` never invokes object methods on unknown wrappers on purpose: calling `GetFullName`/`GetClass` on FName/FString/param values crashes UE4SS marshalling. `Safe.Describe` gates the object path behind `type()`/member checks.
 
 ### Reference tables
 
