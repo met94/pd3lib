@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="API documentation for pd3lib">
+  <title>class pd3.Reflect</title>
+  <link rel="icon" type="image/svg+xml" href="../static/favicon.svg">
+  <script>
+    // Restore the saved theme before first paint to avoid a flash.
+    (function () {
+      try {
+        var t = localStorage.getItem('emmylua-doc-theme');
+        if (t === 'dark' || t === 'light') {
+          document.documentElement.setAttribute('data-theme', t);
+        }
+      } catch (e) { }
+    })();
+  </script>
+  <link rel="stylesheet" href="../static/rustdoc.css">
+  <script>window.LUAFMT_ROOT = "../";</script>
+  <script src="../static/main.js" defer></script>
+</head>
+
+<body>
+  <header class="docbar">
+    <div class="docbar-inner">
+      <button id="sidebar-toggle" class="icon-btn" type="button" aria-label="Toggle navigation" aria-controls="sidebar"
+        aria-expanded="false">
+        <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+          <path
+            d="M1.75 2.5h12.5a.75.75 0 0 1 0 1.5H1.75a.75.75 0 0 1 0-1.5zm0 5h12.5a.75.75 0 0 1 0 1.5H1.75a.75.75 0 0 1 0-1.5zm0 5h12.5a.75.75 0 0 1 0 1.5H1.75a.75.75 0 0 1 0-1.5z" />
+        </svg>
+      </button>
+      <a class="docbar-title" href="../index.html">pd3lib</a>
+      <div class="search">
+        <svg class="search-icon" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+          <path
+            d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z" />
+        </svg>
+        <input id="search-input" type="search" placeholder="Search types, modules, globals..." autocomplete="off"
+          spellcheck="false" role="combobox" aria-expanded="false" aria-controls="search-results"
+          aria-keyshortcuts="/ control+k">
+        <kbd class="search-hint" aria-hidden="true">/</kbd>
+        <div id="search-results" class="search-results" role="listbox" hidden></div>
+      </div>
+      <button id="theme-toggle" class="icon-btn" type="button" aria-label="Toggle dark mode" aria-pressed="false">
+        <svg class="icon-moon" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+          <path
+            d="M6 .278a.768.768 0 0 1 .08.858 7.208 7.208 0 0 0-.878 3.46c0 4.021 3.278 7.277 7.318 7.277.527 0 1.04-.055 1.533-.16a.787.787 0 0 1 .81.316.733.733 0 0 1-.031.893A8.349 8.349 0 0 1 8.344 16C3.734 16 0 12.286 0 7.71 0 4.266 2.114 1.312 5.124.06A.752.752 0 0 1 6 .278z" />
+        </svg>
+        <svg class="icon-sun" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+          <path
+            d="M8 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm0-9.5a.75.75 0 0 0 .75-.75v-1a.75.75 0 0 0-1.5 0v1A.75.75 0 0 0 8 2.5zM2.343 2.343a.75.75 0 0 0 1.06 0l.707-.707a.75.75 0 0 0-1.06-1.06l-.707.707a.75.75 0 0 0 0 1.06zm11.314 0a.75.75 0 0 0-1.06 0l-.707.707a.75.75 0 1 0 1.06 1.06l.707-.707a.75.75 0 0 0 0-1.06zM8 5.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5zm-6 2.75a.75.75 0 0 0 0-1.5h-1a.75.75 0 0 0 0 1.5h1zm12.5 0a.75.75 0 0 0 0-1.5h-1a.75.75 0 0 0 0 1.5h1zM3.464 12.536a.75.75 0 0 0-1.06 0l-.707.707a.75.75 0 1 0 1.06 1.06l.707-.707a.75.75 0 0 0 0-1.06zm10.133 0a.75.75 0 0 1 1.06 0l.707.707a.75.75 0 0 1-1.06 1.06l-.707-.707a.75.75 0 0 1 0-1.06zM8 13.5a.75.75 0 0 1 .75.75v1a.75.75 0 0 1-1.5 0v-1A.75.75 0 0 1 8 13.5z" />
+        </svg>
+      </button>
+    </div>
+  </header>
+  <div id="sidebar-backdrop" hidden></div>
+  <div class="layout">
+    <nav class="sidebar" id="sidebar" aria-label="Site navigation">
+      <div class="sidebar-category"><div class="category-title">Types<span class="category-count">24</span></div><ul><li><details open><summary class="group-label"><span class="group-caret" aria-hidden="true"></span><span class="nav-label">pd3</span></summary><ul><li><a data-name="class pd3.Challenge" href="../class/pd3.Challenge.html" class="nav-item"><span class="kind-badge kind-class" aria-hidden="true">C</span><span class="nav-label">Challenge</span></a></li><li><details><summary class="group-label"><span class="group-caret" aria-hidden="true"></span><span class="nav-label">Challenge</span></summary><ul><li><a data-name="class pd3.Challenge.RecordSummary" href="../class/pd3.Challenge.RecordSummary.html" class="nav-item"><span class="kind-badge kind-class" aria-hidden="true">C</span><span class="nav-label">RecordSummary</span></a></li></ul></details></li><li><a data-name="class pd3.Core" href="../class/pd3.Core.html" class="nav-item"><span class="kind-badge kind-class" aria-hidden="true">C</span><span class="nav-label">Core</span></a></li><li><a data-name="class pd3.Entities" href="../class/pd3.Entities.html" class="nav-item"><span class="kind-badge kind-class" aria-hidden="true">C</span><span class="nav-label">Entities</span></a></li><li><a data-name="class pd3.Game" href="../class/pd3.Game.html" class="nav-item"><span class="kind-badge kind-class" aria-hidden="true">C</span><span class="nav-label">Game</span></a></li><li><a data-name="class pd3.Hooks" href="../class/pd3.Hooks.html" class="nav-item"><span class="kind-badge kind-class" aria-hidden="true">C</span><span class="nav-label">Hooks</span></a></li><li><a data-name="class pd3.Interact" href="../class/pd3.Interact.html" class="nav-item"><span class="kind-badge kind-class" aria-hidden="true">C</span><span class="nav-label">Interact</span></a></li><li><details><summary class="group-label"><span class="group-caret" aria-hidden="true"></span><span class="nav-label">Interact</span></summary><ul><li><a data-name="class pd3.Interact.State" href="../class/pd3.Interact.State.html" class="nav-item"><span class="kind-badge kind-class" aria-hidden="true">C</span><span class="nav-label">State</span></a></li></ul></details></li><li><a data-name="class pd3.Keys" href="../class/pd3.Keys.html" class="nav-item"><span class="kind-badge kind-class" aria-hidden="true">C</span><span class="nav-label">Keys</span></a></li><li><a data-name="class pd3.Lifecycle" href="../class/pd3.Lifecycle.html" class="nav-item"><span class="kind-badge kind-class" aria-hidden="true">C</span><span class="nav-label">Lifecycle</span></a></li><li><a data-name="class pd3.Log" href="../class/pd3.Log.html" class="nav-item"><span class="kind-badge kind-class" aria-hidden="true">C</span><span class="nav-label">Log</span></a></li><li><a data-name="class pd3.Maps" href="../class/pd3.Maps.html" class="nav-item"><span class="kind-badge kind-class" aria-hidden="true">C</span><span class="nav-label">Maps</span></a></li><li><a data-name="class pd3.Mission" href="../class/pd3.Mission.html" class="nav-item"><span class="kind-badge kind-class" aria-hidden="true">C</span><span class="nav-label">Mission</span></a></li><li><details><summary class="group-label"><span class="group-caret" aria-hidden="true"></span><span class="nav-label">Mission</span></summary><ul><li><a data-name="class pd3.Mission.Escape" href="../class/pd3.Mission.Escape.html" class="nav-item"><span class="kind-badge kind-class" aria-hidden="true">C</span><span class="nav-label">Escape</span></a></li></ul></details></li><li><a data-name="class pd3.Reflect" href="../class/pd3.Reflect.html" class="nav-item active"><span class="kind-badge kind-class" aria-hidden="true">C</span><span class="nav-label">Reflect</span></a></li><li><details><summary class="group-label"><span class="group-caret" aria-hidden="true"></span><span class="nav-label">Reflect</span></summary><ul><li><a data-name="class pd3.Reflect.Options" href="../class/pd3.Reflect.Options.html" class="nav-item"><span class="kind-badge kind-class" aria-hidden="true">C</span><span class="nav-label">Options</span></a></li></ul></details></li><li><a data-name="class pd3.Safe" href="../class/pd3.Safe.html" class="nav-item"><span class="kind-badge kind-class" aria-hidden="true">C</span><span class="nav-label">Safe</span></a></li><li><a data-name="class pd3.SelfTest" href="../class/pd3.SelfTest.html" class="nav-item"><span class="kind-badge kind-class" aria-hidden="true">C</span><span class="nav-label">SelfTest</span></a></li><li><details><summary class="group-label"><span class="group-caret" aria-hidden="true"></span><span class="nav-label">SelfTest</span></summary><ul><li><a data-name="class pd3.SelfTest.Check" href="../class/pd3.SelfTest.Check.html" class="nav-item"><span class="kind-badge kind-class" aria-hidden="true">C</span><span class="nav-label">Check</span></a></li></ul></details></li><li><a data-name="class pd3.Shield" href="../class/pd3.Shield.html" class="nav-item"><span class="kind-badge kind-class" aria-hidden="true">C</span><span class="nav-label">Shield</span></a></li><li><a data-name="class pd3.Timers" href="../class/pd3.Timers.html" class="nav-item"><span class="kind-badge kind-class" aria-hidden="true">C</span><span class="nav-label">Timers</span></a></li><li><a data-name="class pd3.World" href="../class/pd3.World.html" class="nav-item"><span class="kind-badge kind-class" aria-hidden="true">C</span><span class="nav-label">World</span></a></li></ul></details></li><li><a data-name="class pd3lib" href="../class/pd3lib.html" class="nav-item"><span class="kind-badge kind-class" aria-hidden="true">C</span><span class="nav-label">pd3lib</span></a></li><li><details><summary class="group-label"><span class="group-caret" aria-hidden="true"></span><span class="nav-label">pd3lib</span></summary><ul><li><a data-name="class pd3lib.InitOptions" href="../class/pd3lib.InitOptions.html" class="nav-item"><span class="kind-badge kind-class" aria-hidden="true">C</span><span class="nav-label">InitOptions</span></a></li></ul></details></li></ul></div><div class="sidebar-category"><div class="category-title">Modules<span class="category-count">17</span></div><ul><li><a data-name="core.hooks" href="../module/core.hooks.html" class="nav-item">core.hooks</a></li><li><a data-name="core.keys" href="../module/core.keys.html" class="nav-item">core.keys</a></li><li><a data-name="core.lifecycle" href="../module/core.lifecycle.html" class="nav-item">core.lifecycle</a></li><li><a data-name="core.log" href="../module/core.log.html" class="nav-item">core.log</a></li><li><a data-name="core.maps" href="../module/core.maps.html" class="nav-item">core.maps</a></li><li><a data-name="core.reflect" href="../module/core.reflect.html" class="nav-item">core.reflect</a></li><li><a data-name="core.safe" href="../module/core.safe.html" class="nav-item">core.safe</a></li><li><a data-name="core.timers" href="../module/core.timers.html" class="nav-item">core.timers</a></li><li><a data-name="core.world" href="../module/core.world.html" class="nav-item">core.world</a></li><li><a data-name="game.challenge" href="../module/game.challenge.html" class="nav-item">game.challenge</a></li><li><a data-name="game.entities" href="../module/game.entities.html" class="nav-item">game.entities</a></li><li><a data-name="game.interact" href="../module/game.interact.html" class="nav-item">game.interact</a></li><li><a data-name="game.mission" href="../module/game.mission.html" class="nav-item">game.mission</a></li><li><a data-name="game.shield" href="../module/game.shield.html" class="nav-item">game.shield</a></li><li><a data-name="init" href="../module/init.html" class="nav-item">init</a></li><li><a data-name="pd3lib" href="../module/pd3lib.html" class="nav-item">pd3lib</a></li><li><a data-name="selftest" href="../module/selftest.html" class="nav-item">selftest</a></li></ul></div>
+    </nav>
+    <main class="content">
+      
+<header class="pagehead">
+  <nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="../index.html">pd3lib</a>
+    <span class="sep" aria-hidden="true">›</span>
+    <span>class</span>
+    <span class="sep" aria-hidden="true">›</span><span>pd3</span>
+  </nav>
+  <div class="pagehead-title">
+    <span class="kind-badge kind-badge-lg kind-class" aria-hidden="true">C</span>
+    <h1 class="pagehead-name">pd3.Reflect</h1>
+    
+  </div>
+  
+</header>
+
+
+
+<div class="docblock doc-lead"><p>Reflection-driven dumpers. Everything is introspection-driven (property and struct metadata) so dumps keep working after game updates; missing members are reported, never fatal. Output is budgeted and truncation is always logged; known-freeze properties (ModeArray/ModeDataArray) are skipped by default.</p></div>
+
+
+
+
+<section class="section" id="methods">
+  <h2><a class="section-link" href="#methods">Methods</a><span class="section-count">10</span>
+  </h2>
+  
+<div class="member" id="Reflect.SetDefaults">
+    <div class="member-head">
+    <span class="member-signature"><pre class="signature"><code><span class="hl-kw">function </span><span class="hl-fn">Reflect.SetDefaults</span>(<span class="hl-var">Overrides</span>: <a href="../class/pd3.Reflect.Options.html">pd3.Reflect.Options</a> | <span class="hl-kw">nil</span>) <span class="hl-op">-&gt;</span> <span class="hl-kw">nil</span></code></pre></span>
+    
+    </div>
+  <div class="member-body">
+    <div class="docblock"><p>Merges Overrides into Reflect.Defaults (shallow; Skip is replaced whole).</p></div>
+    
+    
+    
+    
+    
+    
+  </div>
+</div>
+
+<div class="member" id="Reflect.Format">
+    <div class="member-head">
+    <span class="member-signature"><pre class="signature"><code><span class="hl-kw">function </span><span class="hl-fn">Reflect.Format</span>(<span class="hl-var">Value</span>: <span class="hl-kw">any</span>, <span class="hl-var">Options</span>: <a href="../class/pd3.Reflect.Options.html">pd3.Reflect.Options</a>, <span class="hl-var">Depth</span>: <span class="hl-kw">nil</span> | <span class="hl-kw">integer</span>, <span class="hl-var">Property</span>: <span class="hl-type">UObject</span> | <span class="hl-kw">nil</span>) <span class="hl-op">-&gt;</span> <span class="hl-kw">string</span></code></pre></span>
+    
+    </div>
+  <div class="member-body">
+    
+    
+    
+    <div class="member-detail">
+      <div class="detail-title">Parameters</div>
+      <dl class="param-list">
+        
+        <div class="param-row">
+          <dt><code>Value</code><span class="param-type"><span class="hl-kw">any</span></span></dt>
+          <dd></dd>
+        </div>
+        
+        <div class="param-row">
+          <dt><code>Options</code><span class="param-type"><a href="../class/pd3.Reflect.Options.html">pd3.Reflect.Options</a></span></dt>
+          <dd></dd>
+        </div>
+        
+        <div class="param-row">
+          <dt><code>Depth</code><span class="param-type"><span class="hl-kw">nil</span> | <span class="hl-kw">integer</span></span></dt>
+          <dd><p>recursion budget; &lt;= 0 stops struct/array expansion</p></dd>
+        </div>
+        
+        <div class="param-row">
+          <dt><code>Property</code><span class="param-type"><span class="hl-type">UObject</span> | <span class="hl-kw">nil</span></span></dt>
+          <dd><p>FProperty carrying the struct/array schema</p></dd>
+        </div>
+        
+      </dl>
+    </div>
+    
+    
+    <div class="member-detail">
+      <div class="detail-title">Returns</div>
+      <dl class="param-list">
+        
+        <div class="param-row">
+          <dt><span class="param-type"><span class="hl-kw">string</span></span></dt>
+          <dd></dd>
+        </div>
+        
+      </dl>
+    </div>
+    
+    
+    
+    
+  </div>
+</div>
+
+<div class="member" id="Reflect.PropertyTag">
+    <div class="member-head">
+    <span class="member-signature"><pre class="signature"><code><span class="hl-kw">function </span><span class="hl-fn">Reflect.PropertyTag</span>(<span class="hl-var">Property</span>: <span class="hl-type">UObject</span> | <span class="hl-kw">nil</span>) <span class="hl-op">-&gt;</span> tag <span class="hl-kw">string</span></code></pre></span>
+    
+    </div>
+  <div class="member-body">
+    
+    
+    
+    <div class="member-detail">
+      <div class="detail-title">Parameters</div>
+      <dl class="param-list">
+        
+        <div class="param-row">
+          <dt><code>Property</code><span class="param-type"><span class="hl-type">UObject</span> | <span class="hl-kw">nil</span></span></dt>
+          <dd><p>FProperty</p></dd>
+        </div>
+        
+      </dl>
+    </div>
+    
+    
+    <div class="member-detail">
+      <div class="detail-title">Returns</div>
+      <dl class="param-list">
+        
+        <div class="param-row">
+          <dt><code>tag</code><span class="param-type"><span class="hl-kw">string</span></span></dt>
+          <dd><p>&quot;Property&quot; when the class is unknown, &quot;?&quot; when nil</p></dd>
+        </div>
+        
+      </dl>
+    </div>
+    
+    
+    
+    
+  </div>
+</div>
+
+<div class="member" id="Reflect.PropertiesOf">
+    <div class="member-head">
+    <span class="member-signature"><pre class="signature"><code><span class="hl-kw">function </span><span class="hl-fn">Reflect.PropertiesOf</span>(<span class="hl-var">Target</span>: <span class="hl-kw">any</span>) <span class="hl-op">-&gt;</span> properties <span class="hl-type">UObject</span>[]</code></pre></span>
+    
+    </div>
+  <div class="member-body">
+    <div class="docblock"><p>All FProperty objects of a UObject, UScriptStruct or UScriptClass (anything exposing ForEachProperty or GetClass).</p></div>
+    
+    
+    
+    
+    
+    
+  </div>
+</div>
+
+<div class="member" id="Reflect.FunctionsOf">
+    <div class="member-head">
+    <span class="member-signature"><pre class="signature"><code><span class="hl-kw">function </span><span class="hl-fn">Reflect.FunctionsOf</span>(<span class="hl-var">Struct</span>: <span class="hl-kw">any</span>) <span class="hl-op">-&gt;</span> functionNames <span class="hl-kw">string</span>[]</code></pre></span>
+    
+    </div>
+  <div class="member-body">
+    <div class="docblock"><p>Names of all UFunctions of a UScriptStruct/UScriptClass.</p></div>
+    
+    
+    <div class="member-detail">
+      <div class="detail-title">Parameters</div>
+      <dl class="param-list">
+        
+        <div class="param-row">
+          <dt><code>Struct</code><span class="param-type"><span class="hl-kw">any</span></span></dt>
+          <dd><p>UScriptStruct/UScriptClass</p></dd>
+        </div>
+        
+      </dl>
+    </div>
+    
+    
+    <div class="member-detail">
+      <div class="detail-title">Returns</div>
+      <dl class="param-list">
+        
+        <div class="param-row">
+          <dt><code>functionNames</code><span class="param-type"><span class="hl-kw">string</span>[]</span></dt>
+          <dd></dd>
+        </div>
+        
+      </dl>
+    </div>
+    
+    
+    
+    
+  </div>
+</div>
+
+<div class="member" id="Reflect.FindStruct">
+    <div class="member-head">
+    <span class="member-signature"><pre class="signature"><code><span class="hl-kw">function </span><span class="hl-fn">Reflect.FindStruct</span>(<span class="hl-var">NameOrPath</span>: <span class="hl-kw">any</span>) <span class="hl-op">-&gt;</span> schema <span class="hl-type">UObject</span> | <span class="hl-kw">nil</span></code></pre></span>
+    
+    </div>
+  <div class="member-body">
+    <div class="docblock"><p>Resolves a UScriptStruct by name or path. Non-string arguments pass through. Struct names drop the F prefix: &quot;FSBZChallengeData&quot; -&gt; &quot;SBZChallengeData&quot;.</p></div>
+    
+    
+    <div class="member-detail">
+      <div class="detail-title">Parameters</div>
+      <dl class="param-list">
+        
+        <div class="param-row">
+          <dt><code>NameOrPath</code><span class="param-type"><span class="hl-kw">any</span></span></dt>
+          <dd><p>struct name, full path, or an existing object</p></dd>
+        </div>
+        
+      </dl>
+    </div>
+    
+    
+    <div class="member-detail">
+      <div class="detail-title">Returns</div>
+      <dl class="param-list">
+        
+        <div class="param-row">
+          <dt><code>schema</code><span class="param-type"><span class="hl-type">UObject</span> | <span class="hl-kw">nil</span></span></dt>
+          <dd></dd>
+        </div>
+        
+      </dl>
+    </div>
+    
+    
+    
+    
+  </div>
+</div>
+
+<div class="member" id="Reflect.DumpProperties">
+    <div class="member-head">
+    <span class="member-signature"><pre class="signature"><code><span class="hl-kw">function </span><span class="hl-fn">Reflect.DumpProperties</span>(<span class="hl-var">Target</span>: <span class="hl-kw">any</span>, <span class="hl-var">Opts</span>: <a href="../class/pd3.Reflect.Options.html">pd3.Reflect.Options</a> | <span class="hl-kw">nil</span>) <span class="hl-op">-&gt;</span> lines <span class="hl-kw">string</span>[]</code></pre></span>
+    
+    </div>
+  <div class="member-body">
+    <div class="docblock"><p>Dumps all reflected properties of a live UObject with values and type tags.</p></div>
+    
+    
+    <div class="member-detail">
+      <div class="detail-title">Parameters</div>
+      <dl class="param-list">
+        
+        <div class="param-row">
+          <dt><code>Target</code><span class="param-type"><span class="hl-kw">any</span></span></dt>
+          <dd><p>live UObject; nil yields a single &quot;&lt;nil target&gt;&quot; line</p></dd>
+        </div>
+        
+        <div class="param-row">
+          <dt><code>Opts</code><span class="param-type"><a href="../class/pd3.Reflect.Options.html">pd3.Reflect.Options</a> | <span class="hl-kw">nil</span></span></dt>
+          <dd><p>per-call overrides; opts.Filter = name substring</p></dd>
+        </div>
+        
+      </dl>
+    </div>
+    
+    
+    <div class="member-detail">
+      <div class="detail-title">Returns</div>
+      <dl class="param-list">
+        
+        <div class="param-row">
+          <dt><code>lines</code><span class="param-type"><span class="hl-kw">string</span>[]</span></dt>
+          <dd><p>lines are also logged via pd3.log.Info</p></dd>
+        </div>
+        
+      </dl>
+    </div>
+    
+    
+    
+    
+  </div>
+</div>
+
+<div class="member" id="Reflect.DumpStruct">
+    <div class="member-head">
+    <span class="member-signature"><pre class="signature"><code><span class="hl-kw">function </span><span class="hl-fn">Reflect.DumpStruct</span>(<span class="hl-var">Value</span>: <span class="hl-kw">any</span>, <span class="hl-var">Struct</span>: <span class="hl-kw">any</span>, <span class="hl-var">Opts</span>: <a href="../class/pd3.Reflect.Options.html">pd3.Reflect.Options</a> | <span class="hl-kw">nil</span>) <span class="hl-op">-&gt;</span> lines <span class="hl-kw">string</span>[]</code></pre></span>
+    
+    </div>
+  <div class="member-body">
+    <div class="docblock"><p>Dumps a struct value (wrapper or table) using reflection from its UScriptStruct.</p></div>
+    
+    
+    <div class="member-detail">
+      <div class="detail-title">Parameters</div>
+      <dl class="param-list">
+        
+        <div class="param-row">
+          <dt><code>Value</code><span class="param-type"><span class="hl-kw">any</span></span></dt>
+          <dd><p>struct value; nil yields a single &quot;&lt;nil value&gt;&quot; line</p></dd>
+        </div>
+        
+        <div class="param-row">
+          <dt><code>Struct</code><span class="param-type"><span class="hl-kw">any</span></span></dt>
+          <dd><p>name (&quot;SBZChallengeData&quot;), path, or UScriptStruct object</p></dd>
+        </div>
+        
+        <div class="param-row">
+          <dt><code>Opts</code><span class="param-type"><a href="../class/pd3.Reflect.Options.html">pd3.Reflect.Options</a> | <span class="hl-kw">nil</span></span></dt>
+          <dd></dd>
+        </div>
+        
+      </dl>
+    </div>
+    
+    
+    <div class="member-detail">
+      <div class="detail-title">Returns</div>
+      <dl class="param-list">
+        
+        <div class="param-row">
+          <dt><code>lines</code><span class="param-type"><span class="hl-kw">string</span>[]</span></dt>
+          <dd><p>lines are also logged via pd3.log.Info</p></dd>
+        </div>
+        
+      </dl>
+    </div>
+    
+    
+    
+    
+  </div>
+</div>
+
+<div class="member" id="Reflect.DumpClass">
+    <div class="member-head">
+    <span class="member-signature"><pre class="signature"><code><span class="hl-kw">function </span><span class="hl-fn">Reflect.DumpClass</span>(<span class="hl-var">NameOrPath</span>: <span class="hl-kw">any</span>, <span class="hl-var">Opts</span>: <a href="../class/pd3.Reflect.Options.html">pd3.Reflect.Options</a> | <span class="hl-kw">nil</span>) <span class="hl-op">-&gt;</span> lines <span class="hl-kw">string</span>[]</code></pre></span>
+    
+    </div>
+  <div class="member-body">
+    <div class="docblock"><p>Dumps a class/struct: property list then function list.</p></div>
+    
+    
+    <div class="member-detail">
+      <div class="detail-title">Parameters</div>
+      <dl class="param-list">
+        
+        <div class="param-row">
+          <dt><code>NameOrPath</code><span class="param-type"><span class="hl-kw">any</span></span></dt>
+          <dd><p>live object/class, class short name, or full object path</p></dd>
+        </div>
+        
+        <div class="param-row">
+          <dt><code>Opts</code><span class="param-type"><a href="../class/pd3.Reflect.Options.html">pd3.Reflect.Options</a> | <span class="hl-kw">nil</span></span></dt>
+          <dd></dd>
+        </div>
+        
+      </dl>
+    </div>
+    
+    
+    <div class="member-detail">
+      <div class="detail-title">Returns</div>
+      <dl class="param-list">
+        
+        <div class="param-row">
+          <dt><code>lines</code><span class="param-type"><span class="hl-kw">string</span>[]</span></dt>
+          <dd><p>lines are also logged via pd3.log.Info</p></dd>
+        </div>
+        
+      </dl>
+    </div>
+    
+    
+    
+    
+  </div>
+</div>
+
+<div class="member" id="Reflect.DumpEnum">
+    <div class="member-head">
+    <span class="member-signature"><pre class="signature"><code><span class="hl-kw">function </span><span class="hl-fn">Reflect.DumpEnum</span>(<span class="hl-var">EnumOrName</span>: <span class="hl-kw">any</span>, <span class="hl-var">Opts</span>: <a href="../class/pd3.Reflect.Options.html">pd3.Reflect.Options</a> | <span class="hl-kw">nil</span>) <span class="hl-op">-&gt;</span> lines <span class="hl-kw">string</span>[]</code></pre></span>
+    
+    </div>
+  <div class="member-body">
+    <div class="docblock"><p>Dumps an enum&#39;s names and values.</p></div>
+    
+    
+    <div class="member-detail">
+      <div class="detail-title">Parameters</div>
+      <dl class="param-list">
+        
+        <div class="param-row">
+          <dt><code>EnumOrName</code><span class="param-type"><span class="hl-kw">any</span></span></dt>
+          <dd><p>enum name (tried under /Script/Starbreeze first), path, or UEnum object</p></dd>
+        </div>
+        
+        <div class="param-row">
+          <dt><code>Opts</code><span class="param-type"><a href="../class/pd3.Reflect.Options.html">pd3.Reflect.Options</a> | <span class="hl-kw">nil</span></span></dt>
+          <dd></dd>
+        </div>
+        
+      </dl>
+    </div>
+    
+    
+    <div class="member-detail">
+      <div class="detail-title">Returns</div>
+      <dl class="param-list">
+        
+        <div class="param-row">
+          <dt><code>lines</code><span class="param-type"><span class="hl-kw">string</span>[]</span></dt>
+          <dd><p>lines are also logged via pd3.log.Info</p></dd>
+        </div>
+        
+      </dl>
+    </div>
+    
+    
+    
+    
+  </div>
+</div>
+
+</section>
+
+
+
+<section class="section" id="fields">
+  <h2><a class="section-link" href="#fields">Fields</a><span class="section-count">1</span></h2>
+  
+<div class="member" id="Reflect.Defaults">
+    <div class="member-head">
+    <span class="member-signature"><pre class="signature"><code><span class="hl-var">Reflect</span><span class="hl-op">.</span><span class="hl-prop">Defaults</span> <span class="hl-op">:</span> <a href="../class/pd3.Reflect.Options.html">pd3.Reflect.Options</a></code></pre></span>
+    
+    </div>
+  <div class="member-body">
+    <div class="docblock"><p>global defaults used when a call passes no Opts</p></div>
+    
+    
+    
+    
+    
+    
+  </div>
+</div>
+
+</section>
+
+
+    </main>
+    
+
+<aside class="toc" id="toc" aria-label="On this page">
+  <div class="toc-title">On this page</div>
+  <ul class="toc-list">
+    
+    <li><a href="#methods">Methods</a></li>
+    
+    <li class="toc-sub"><a href="#Reflect.SetDefaults">SetDefaults</a></li>
+    
+    <li class="toc-sub"><a href="#Reflect.Format">Format</a></li>
+    
+    <li class="toc-sub"><a href="#Reflect.PropertyTag">PropertyTag</a></li>
+    
+    <li class="toc-sub"><a href="#Reflect.PropertiesOf">PropertiesOf</a></li>
+    
+    <li class="toc-sub"><a href="#Reflect.FunctionsOf">FunctionsOf</a></li>
+    
+    <li class="toc-sub"><a href="#Reflect.FindStruct">FindStruct</a></li>
+    
+    <li class="toc-sub"><a href="#Reflect.DumpProperties">DumpProperties</a></li>
+    
+    <li class="toc-sub"><a href="#Reflect.DumpStruct">DumpStruct</a></li>
+    
+    <li class="toc-sub"><a href="#Reflect.DumpClass">DumpClass</a></li>
+    
+    <li class="toc-sub"><a href="#Reflect.DumpEnum">DumpEnum</a></li>
+    
+    
+    
+    <li><a href="#fields">Fields</a></li>
+    
+    <li class="toc-sub"><a href="#Reflect.Defaults">Defaults</a></li>
+    
+    
+  </ul>
+</aside>
+
+
+  </div>
+</body>
+
+</html>
