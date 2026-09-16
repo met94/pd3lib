@@ -198,8 +198,8 @@ timers). Mods can add checks with `pd3.selftest.Add(name, fn)` where `fn` return
 
 ## Documentation
 
-- [`docs/api/`](docs/api/) — per-class API reference generated from the LuaCATS annotations in
-  the source.
+- [`docs/api/index.md`](docs/api/index.md) — per-class API reference generated from the LuaCATS
+  annotations in the source.
 - [`docs/knowledge-base.md`](docs/knowledge-base.md) — PAYDAY 3 notes: authority/topology,
   interaction flow, human shield, challenge/achievement internals, UE4SS data-type pitfalls and
   reference tables.
@@ -208,7 +208,7 @@ Regenerate the API reference after annotation changes:
 
 ```
 cargo install emmylua_doc_cli --locked
-emmylua_doc_cli . -o docs/api --site-name pd3lib
+emmylua_doc_cli . -f markdown -o docs/api --site-name pd3lib
 ```
 
 ## Versioning
