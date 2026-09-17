@@ -34,6 +34,7 @@ function pd3lib.Init(Options: pd3lib.InitOptions?) -> pd3 pd3lib {
     shield = pd3.Shield,
     challenge = pd3.Challenge,
     mission = pd3.Mission,
+    heist = pd3.Heist,
     Init = function,
     Unload = function,
 }
@@ -133,6 +134,7 @@ pd3lib.game : pd3.Game {
     shield: pd3.Shield,
     challenge: pd3.Challenge,
     mission: pd3.Mission,
+    heist: pd3.Heist,
 }
 ```
 
@@ -502,6 +504,27 @@ pd3lib.mission : pd3.Mission {
     DumpHeistData: function,
     DumpMissionResult: function,
     ...(+0)
+}
+```
+
+
+
+
+
+
+
+
+
+
+### pd3lib.heist
+---
+```lua
+pd3lib.heist : pd3.Heist {
+    ExitReasons: table<string,string>,
+    Watch: function,
+    Unwatch: function,
+    Active: function,
+    Probe: function,
 }
 ```
 

@@ -4,6 +4,14 @@ All notable changes to pd3lib are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/), and versions match the `pd3.Version`
 compatibility line.
 
+## [2.1.0] - 2026-09-17
+
+### Added
+
+- `game.heist` — heist-scoped `Watch`/`Unwatch` with `Enter`/`Exit` callbacks; detection runs
+  once per level init (deferred out of hook context), so single-heist mods can keep their
+  hooks and timers idle in menus and other heists.
+
 ## [2.0.0] - 2026-09-16
 
 Initial standalone release. Extracted from the InsurancePolicySolo monorepo with full history.

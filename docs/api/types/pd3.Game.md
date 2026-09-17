@@ -161,4 +161,25 @@ Game.mission : pd3.Mission {
 
 
 
+### Game.heist
+---
+```lua
+Game.heist : pd3.Heist {
+    ExitReasons: table<string,string>,
+    Watch: function,
+    Unwatch: function,
+    Active: function,
+    Probe: function,
+}
+```
+
+
+
+
+
+
+
+
+
+
 

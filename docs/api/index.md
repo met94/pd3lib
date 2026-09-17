@@ -3,12 +3,14 @@
 
 ## Types
 
+- [class Callbacks](types/pd3.Heist.Callbacks.md)
 - [class Challenge](types/pd3.Challenge.md)
 - [class Check](types/pd3.SelfTest.Check.md)
 - [class Core](types/pd3.Core.md)
 - [class Entities](types/pd3.Entities.md)
 - [class Escape](types/pd3.Mission.Escape.md)
 - [class Game](types/pd3.Game.md)
+- [class Heist](types/pd3.Heist.md)
 - [class Hooks](types/pd3.Hooks.md)
 - [class InitOptions](types/pd3lib.InitOptions.md)
 - [class Interact](types/pd3.Interact.md)
@@ -42,6 +44,7 @@
 - [core.world](modules/core.world.md)
 - [game.challenge](modules/game.challenge.md)
 - [game.entities](modules/game.entities.md)
+- [game.heist](modules/game.heist.md)
 - [game.interact](modules/game.interact.md)
 - [game.mission](modules/game.mission.md)
 - [game.shield](modules/game.shield.md)

@@ -170,6 +170,16 @@ Registration is lazy: hooks are installed on first callback.
 - `Escape(state)` -> `{ TimeLeft, PlayersIn, PlayersRequired }`
 - `Criterion(name)` — e.g. `Criterion("InsurancePolicy")`; nil outside a mission
 
+### game.heist
+- `Watch(ref, { Enter = fn(ref), Exit = fn(ref, reason) })` -> id — fires `Enter` when the
+  live mission's heist ref matches and `Exit` when leaving it; keep hooks/timers idle outside
+  the heist
+- `Unwatch(id)`, `Active()` -> ref|nil, `Probe()` (re-detect on the next tick)
+- Exit reasons: `menu`, `restart`, `level` (heist changed), `unwatch`
+- Detection runs once per level init (deferred out of hook context); no polling. A level
+  restart fires `Exit`, the following level init re-arms. Mission end does not fire `Exit` —
+  the mission state stays alive until the level changes
+
 ## Multi-mod use
 
 pd3lib is designed to be loaded by several mods at once:
