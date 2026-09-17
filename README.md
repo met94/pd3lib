@@ -9,9 +9,9 @@ requires it, or use it to build your own.
 
 ## Requirements
 
-- PAYDAY 3 + **PD3 UE4SS V3.01 + Allow Pak Mods (BETA)** (ModWorkshop mod 47771, UE4SS
-  v3.0.1 Beta #0). Older UE4SS builds miss APIs the library relies on; the library is tested
-  against this build.
+- PAYDAY 3 + [PD3 UE4SS V3.01 + Allow Pak Mods (BETA)](https://modworkshop.net/mod/47771)
+  (UE4SS v3.0.1 Beta #0). Older UE4SS builds miss APIs the library relies on; the library is
+  tested against this build.
 - No other dependencies. Pure Lua 5.1-compatible code (runs on the UE4SS Lua runtime).
 
 ## Install
