@@ -16,17 +16,40 @@ requires it, or use it to build your own.
 
 ## Install
 
-Copy this repository's contents into:
+pd3lib is vendored into each mod. There is no shared/global install step and `Mods/shared` is
+never used.
+
+1. Copy `pd3lib.lua` and the `pd3lib/` folder from the download (or this repo) into your mod's
+   `scripts` folder. Keep the folder named `pd3lib` — the library's internal
+   `require("pd3lib.*")` calls depend on it.
+2. Load it in your `main.lua`:
+
+   ```lua
+   local pd3 = require("pd3lib")
+   ```
+
+Resulting layout:
 
 ```
-...\PAYDAY3\Binaries\Win64\ue4ss\Mods\shared\pd3lib
+MyMod/
+  scripts/
+    main.lua
+    pd3lib.lua
+    pd3lib/
+      core/
+      game/
+      selftest.lua
+      LICENSE.md
 ```
 
-UE4SS puts `Mods/shared` on every Lua mod's `require` path, so mods load the library with
-`require("pd3lib")`. Each mod gets its own copy — see [Multi-mod use](#multi-mod-use).
+UE4SS searches a mod's own `Scripts` folder before `Mods/shared`, so the vendored copy always
+wins and no other mod can overwrite it. See [Vendoring](#vendoring) for why this is the only
+supported install.
 
-Developers: add this repo as a git submodule and mirror it into `Mods/shared/pd3lib` from
-your deploy script.
+### Git submodule (optional)
+
+Add this repo as a git submodule and mirror `pd3lib.lua`, `core/`, `game/`, `selftest.lua`
+and `LICENSE.md` into your mod's `scripts` folder from your deploy script.
 
 ## Quick start
 
@@ -190,10 +213,33 @@ pd3lib is designed to be loaded by several mods at once:
 - `pd3.Init` per mod is safe. `pd3.Unload()` from one mod unhooks only that mod's hooks.
 - Hooks registered on the same engine function by two mods both fire; ordering is not guaranteed.
 - Two mods binding the same key both get the callback. Prefer unique keys for global shortcuts.
-- `Mods/shared` holds exactly one pd3lib. If two mods ship different versions, the one deployed
-  last wins — pin a compatible version and state the minimum `pd3.Version` you need.
+- Each mod vendors its own pd3lib, so different versions cannot conflict — there is no shared
+  folder to overwrite.
 - `UnregisterKeyBind` does not exist in UE4SS; `pd3.keys.UnbindAll()` cannot remove bindings and
   logs a warning. Bindings only go away when the game (or mod) unloads.
+
+## Vendoring
+
+Vendoring means shipping pd3lib inside your mod. It is the only supported install:
+
+```
+MyMod/
+  scripts/
+    main.lua
+    pd3lib.lua        <- copy of this repo's pd3lib.lua
+    pd3lib/
+      core/
+      game/
+      selftest.lua
+      LICENSE.md
+```
+
+`require("pd3lib")` resolves to `scripts/pd3lib.lua`, and the library's internal
+`require("pd3lib.core.*")` calls resolve inside `scripts/pd3lib/`.
+
+Why: a vendored mod keeps working forever — regardless of later pd3lib releases or other mods,
+and even if its author leaves the scene. `release.ps1` builds the download zip in exactly this
+layout.
 
 ## Selftest
 
@@ -221,10 +267,23 @@ cargo install emmylua_doc_cli --locked
 emmylua_doc_cli . -f markdown -o docs/api --site-name pd3lib
 ```
 
+The CLI writes into `docs/api/docs/` plus a generated `docs/api/mkdocs.yml`; move `index.md`,
+`modules/` and `types/` up into `docs/api/` and delete the extra files to match the committed
+layout.
+
 ## Versioning
 
-`pd3.Version` is an integer compatibility line, bumped on breaking API changes; additive changes
-keep the number. Repo tags follow `v<Version>.<minor>.<patch>`. See [CHANGELOG.md](CHANGELOG.md).
+`pd3.Version` is an integer major; repo tags follow `v<major>.<minor>.<patch>`. See
+[CHANGELOG.md](CHANGELOG.md).
+
+Compatibility policy:
+
+- Within a major, changes are additive only. Existing public functions, fields, argument
+  orders and return shapes are never removed, renamed or repurposed.
+- Breaking changes bump the major. Released mods are unaffected — they vendor the version they
+  shipped with — and old versions stay downloadable on ModWorkshop and GitHub.
+- Because every mod carries its own copy, there is nothing to update in place and no way for a
+  newer pd3lib to break an older mod.
 
 ## License
 

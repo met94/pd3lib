@@ -4,6 +4,19 @@ All notable changes to pd3lib are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/), and versions match the `pd3.Version`
 compatibility line.
 
+## [2.1.1] - 2026-09-17
+
+### Added
+
+- `release.ps1` — builds `dist/pd3lib-<version>.zip` for the ModWorkshop submission (root
+  `pd3lib/`, library files only) and verifies the archive contents.
+
+### Changed
+
+- README: ModWorkshop install steps, a vendoring guide (ship pd3lib inside a mod's `Scripts`
+  folder so released mods are self-contained) and a compatibility promise (additive-only within
+  a major; breaking changes ship side-by-side under a new package name).
+
 ## [2.1.0] - 2026-09-17
 
 ### Added
