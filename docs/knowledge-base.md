@@ -141,6 +141,11 @@ surrendered civilian), then completion leads to `Multicast_HumanShieldInstigator
 - `Safe.Resolve` never invokes object methods on unknown wrappers on purpose: calling
   `GetFullName`/`GetClass` on FName/FString/param values crashes UE4SS marshalling.
   `Safe.Describe` gates the object path behind `type()`/member checks.
+- **Native hook removal is lazy.** Lua `UnregisterHook` only marks the hook
+  (`scheduled_for_removal` in `LuaMod.cpp`): the Lua callback stops firing immediately (the
+  pre-hook skips it), but the engine unhook and the verbose `Unregistering native pre-hook
+  (...)` log happen when the hooked function is next invoked. Cleanup log lines therefore
+  appear at the next fire, not at unhook time — they do not mean hooks leaked.
 
 ## Reference tables
 
