@@ -41,6 +41,15 @@ compatibility line.
 - README — "UE4SS marshalling quirks" section: FText wrapper crash, by-value struct
   returns dropping TArray/TMap, inconsistent `#`/`GetArrayNum`, out-parameter tables
   rejected, FName argument marshalling, UFunction userdata calls.
+- `game.loadout` — `EquippedWeaponData(slot, index)`: the runtime
+  (attachment-adjusted) weapon data of the equipped config plus the original base
+  asset (the game swaps `EquippableData` for a transient player-state copy, so
+  `Weapons.Raw` on it yields game-adjusted hidden stats).
+- `game.loadout` — `WidgetConfig(slot, index)`: the scratch stats widget's runtime
+  config including the `ModDataMap`, used as the primary attachment source
+  (screen-independent, `Source = "loadout+widget"`); `EquippedConfig` info gains
+  `BaseEquippableData`, and `WeaponData(config, dataOverride)` reports the base asset
+  when the config holds a runtime copy.
 
 ## [2.1.1] - 2026-09-17
 

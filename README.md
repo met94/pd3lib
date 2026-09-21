@@ -235,10 +235,20 @@ Registration is lazy: hooks are installed on first callback.
   (`FSBZEquippableConfig`) via `SBZLoadoutLibrary:GetWeaponConfigSlot(world, slot, activeIndex)`
   (direct returns only: this UE4SS build rejects trailing out-parameter tables), with live
   main-menu widget fallbacks and a clean error otherwise; the by-value library copy loses the
-  attachment arrays, so the equipped `ModDataMap` comes from the live loadout weapon slot button
+  attachment arrays, so the equipped `ModDataMap` comes from the runtime widget config
+  (`Source = "loadout+widget"`), then the live loadout weapon slot button
   (`WBP_UI_LoadoutCustomization_WeaponSlotButton_C`, matched by `WeaponSlotIndex` + weapon path;
-  `Source = "loadout+slotbutton"`), then from live customization/mod screen configs
-- `WeaponData(config)` — weapon data asset plus `DisplayName` / path / `IsRanged`
+  `Source = "loadout+slotbutton"`), then live customization/mod screen configs. `info` carries
+  both `EquippableData` (may be the runtime copy) and `BaseEquippableData` (the original asset)
+- `WidgetConfig(slot, index)` -> `config, equippedData, originalData, err` — the scratch stats
+  widget's `BaseEquippableConfig` after `SetBaseFromSlot`: the game's runtime config for that
+  loadout slot, including the `ModDataMap`; works independently of which menu screen is open
+- `WeaponData(config, dataOverride?)` — weapon data asset plus `DisplayName` / path / `IsRanged`
+  (pass `dataOverride` to report the base asset when the config holds a runtime copy)
+- `EquippedWeaponData(slot, index)` — the runtime (attachment-adjusted) weapon data of the
+  equipped config plus the original base asset: after `SetBaseFromSlot` the config's
+  `EquippableData` is a transient copy under the player state, so `Weapons.Raw()` on it yields
+  the game-adjusted hidden stats (`OriginalEquippableData` still points at the base asset)
 - `ConfigParts(config)` — equipped attachments from `ModDataMap` (+ `ModDataArray` extras) with
   slot/part display names (localized `DisplayName`, falling back to `PrettyName` of the asset
   name), `AttributeModifierMap` modifiers and curve-expanded multipliers

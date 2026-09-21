@@ -435,7 +435,7 @@ end
 --- by-value library config carries none.
 ---@param SlotNameOrIndex? string|integer # "PrimaryWeapon" or ESBZEquippableLoadoutSlot; default primary
 ---@return any? config # FSBZEquippableConfig wrapper
----@return table? info # { Source, Slot, SlotName, Index, EquippableData, Widget }
+---@return table? info # { Source, Slot, SlotName, Index, EquippableData, BaseEquippableData, Widget }
 ---@return string? err
 function Loadout.EquippedConfig(SlotNameOrIndex)
     local Slot = SlotNameOrIndex
@@ -466,6 +466,18 @@ function Loadout.EquippedConfig(SlotNameOrIndex)
                 LastErr = "loadout config has no resolvable weapon data"
             else
                 local DataPath = ObjectPath(Data)
+                local BaseData = Data
+                if not HasMods(Config) then
+                    local RuntimeConfig, _, RuntimeOriginal = Loadout.WidgetConfig(Slot, Index)
+                    local RuntimeOriginalPath = ObjectPath(RuntimeOriginal)
+                    if RuntimeConfig ~= nil and HasMods(RuntimeConfig)
+                        and (RuntimeOriginalPath == nil or RuntimeOriginalPath == DataPath) then
+                        Log.Debug("loadout: attachments from runtime widget config (idx=%s)", tostring(Index))
+                        Config = RuntimeConfig
+                        Source = "loadout+widget"
+                        if RuntimeOriginal ~= nil then BaseData = RuntimeOriginal end
+                    end
+                end
                 if not HasMods(Config) then
                     local ButtonConfig, ButtonDataPath, ButtonName = SlotButtonConfig(Slot, Index, DataPath)
                     if ButtonConfig ~= nil and HasMods(ButtonConfig) then
@@ -489,6 +501,7 @@ function Loadout.EquippedConfig(SlotNameOrIndex)
                     SlotName = Loadout.SlotNames[Slot],
                     Index = Index,
                     EquippableData = Safe.Get(Config, "EquippableData"),
+                    BaseEquippableData = BaseData,
                 }
             end
         else
@@ -504,6 +517,7 @@ function Loadout.EquippedConfig(SlotNameOrIndex)
             SlotName = Loadout.SlotNames[Slot],
             Index = 0,
             EquippableData = Safe.Get(WidgetConfig, "EquippableData"),
+            BaseEquippableData = AsObject(Safe.Get(WidgetConfig, "EquippableData")),
             Widget = WidgetName,
         }
     end
@@ -519,6 +533,7 @@ function Loadout.EquippedConfig(SlotNameOrIndex)
                         SlotName = Loadout.SlotNames[Slot],
                         Index = 0,
                         EquippableData = Safe.Get(Config, "EquippableData"),
+                        BaseEquippableData = AsObject(Safe.Get(Config, "EquippableData")),
                         Widget = Candidate.Name,
                     }
                 end
@@ -529,11 +544,55 @@ function Loadout.EquippedConfig(SlotNameOrIndex)
     return nil, nil, LastErr .. "; no live menu config found"
 end
 
+--- Config from the scratch stats widget after SetBaseFromSlot: the game's own
+--- runtime config for that loadout slot, including the ModDataMap that
+--- by-value library returns lose. Unlike the loadout weapon slot buttons this
+--- works independently of which menu screen is open.
+---@param Slot integer # ESBZEquippableLoadoutSlot
+---@param Index integer # config slot index from Loadout.ActiveConfigIndex
+---@return any? config
+---@return UObject? equippedData # runtime (attachment-adjusted) copy
+---@return UObject? originalData # base asset
+---@return string? err
+function Loadout.WidgetConfig(Slot, Index)
+    if type(Slot) ~= "number" or type(Index) ~= "number" then
+        return nil, nil, nil, "slot/index required"
+    end
+
+    local Widget, WidgetErr = Loadout.ScratchWidget()
+    if Widget == nil then return nil, nil, nil, WidgetErr end
+
+    local OkSet, Err = Safe.CallFn(Widget, "SetBaseFromSlot", Slot, Index)
+    if not OkSet then return nil, nil, nil, "SetBaseFromSlot failed: " .. tostring(Safe.Resolve(Err)) end
+
+    local Config = Safe.Get(Widget, "BaseEquippableConfig")
+    if Config == nil then return nil, nil, nil, "BaseEquippableConfig missing" end
+
+    return Config, AsObject(Safe.Get(Config, "EquippableData")), AsObject(Safe.Get(Config, "OriginalEquippableData")), nil
+end
+
+--- Runtime (attachment-adjusted) weapon data of the equipped config. When the
+--- loadout is applied the game swaps the config's EquippableData for a
+--- transient copy under the player state; SetBaseFromSlot resolves it, and
+--- OriginalEquippableData still points at the base asset. Reading Raw() on the
+--- returned object yields the game-adjusted hidden stats.
+---@param Slot integer # ESBZEquippableLoadoutSlot
+---@param Index integer # config slot index from Loadout.ActiveConfigIndex
+---@return UObject? equippedData
+---@return UObject? originalData
+---@return string? err
+function Loadout.EquippedWeaponData(Slot, Index)
+    local _, Equipped, Original, Err = Loadout.WidgetConfig(Slot, Index)
+    if Equipped == nil then return nil, nil, Err or "runtime weapon data unresolved" end
+    return Equipped, Original, nil
+end
+
 --- Weapon data asset of a config plus display metadata.
 ---@param Config any
+---@param DataOverride? UObject # use this data asset instead of the config's EquippableData
 ---@return table? weapon # { Object, Path, Name, DisplayName, IsRanged }
-function Loadout.WeaponData(Config)
-    local Data = AsObject(Safe.Get(Config, "EquippableData"))
+function Loadout.WeaponData(Config, DataOverride)
+    local Data = AsObject(DataOverride) or AsObject(Safe.Get(Config, "EquippableData"))
     if Data == nil then return nil end
 
     local Path = ObjectPath(Data) or ""
