@@ -4,6 +4,44 @@ All notable changes to pd3lib are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/), and versions match the `pd3.Version`
 compatibility line.
 
+## [Unreleased]
+
+### Added
+
+- `game.weapons` — weapon database/entry enumeration (`Databases`, `All`, `Find`,
+  `Ensure` with a `LoadAsset` fallback),
+  raw and hidden stat reads (`Raw`: fire, spread, recoil/gun-kick, swap notify times
+  and play rates), modular parts (`Parts`, `PartInfo` with `AttributeModifierMap`),
+  attribute curve evaluation (`AttributeCurves`, `CurveValue`, `AttributeValue`)
+  against the live `CT_ModData_Default` with a generated fallback
+  (`game.weapons_curves`), parent-attribute expansion
+  (`AttributeParents`, `ModifierMultipliers`) and UI stat weights
+  (`UiWeights`, `UiStatsAsset`, `UiStats`; loaded-instances-only because UE4SS
+  crashes wrapping the unset `WeaponStatsAssetPath` soft pointer), plus
+  `Dump`/`Json`/`WriteJson` helpers.
+- `game.weapons` — `AttributeIdentifiers` (the game's own attribute display names and
+  children) and `BarsApprox`/`BarRanges` (reduced + cross-weapon normalized 0..100 bars
+  when the game-computed values are unavailable).
+- `game.loadout` — the actually equipped weapon config (`ActiveConfigIndex` +
+  `EquippedConfig` via `SBZLoadoutLibrary:GetWeaponConfigSlot`, live menu widget
+  fallbacks), equipped attachments (`ConfigParts` from `ModDataMap`/`ModDataArray`,
+  supplied by the live loadout weapon slot button when the by-value library config
+  loses them), display metadata (`WeaponData`) and the game-computed stat bars via a
+  scratch `SBZMainMenuWeaponStatsWidget` (`ScratchWidget`, `ConfigBars`,
+  `DataBars`, `EquippedBars`; normalized 0..100, all-zero results rejected,
+  live widgets are never mutated), plus `Loadout.PrettyName` for attachment
+  labels when the asset has no localized `DisplayName`.
+- `core.safe` — `TextOrNil(ftext)` (trimmed FText, nil when missing) and a documented
+  crash hazard: resolving FText property wrappers with `Resolve` faults inside
+  `UE4SS.dll` (dump-verified); use `Text`/`TextOrNil`.
+- `core.maps` — `Count(map)`: `Size` when available, otherwise counts via `ForEach`
+  (struct-property TMaps iterate while `#`/`Size` fail).
+- `core.world` — `LoadClass(packagePath, classPath)`: `StaticFindObject` with an
+  `LoadAsset(package)` retry, for blueprint classes.
+- README — "UE4SS marshalling quirks" section: FText wrapper crash, by-value struct
+  returns dropping TArray/TMap, inconsistent `#`/`GetArrayNum`, out-parameter tables
+  rejected, FName argument marshalling, UFunction userdata calls.
+
 ## [2.1.1] - 2026-09-17
 
 ### Added

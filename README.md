@@ -90,10 +90,14 @@ Error-tolerant accessors; every helper swallows errors via `pcall` and never rai
 - `Get(obj, prop)` / `Set(obj, prop, value)` / `CallFn(obj, name, ...)`
 - `IsValid(obj)`, `Describe(value)` (object full name + class; unwraps hook `:get()` wrappers)
 - `Text(ftext)` (FText -> string, `KismetTextLibrary` fallback)
+- `TextOrNil(ftext)` — `Text` trimmed; nil for nil, empty, whitespace-only or `"nil"` results
+  (menu FTexts can stringify to a single space in this build)
 - `Count(obj, arrayProp)`, `Num(value, default)`
 - `Resolve(value)` — unwraps UE4SS value wrappers: `RemoteUnrealParam`/`LocalUnrealParam` via
   `:get()`; `FString`/`FName`/`FText`/`FGuid` via `:ToString()` (returns a Lua string); UObject
   derivatives pass through unchanged (`GetFullName` guard); depth-capped to avoid wrapper loops.
+  **Never call on FText property wrappers**: the `:get()` path crashed UE4SS marshalling
+  (dump-verified access violation in `UE4SS.dll`); use `Text`/`TextOrNil` for text values.
 - `String(value)` — `Resolve` then `tostring` for primitives, `Describe` fallback.
 - `ArrayCount(value)` — `#`, then `GetArrayNum`, else nil (`TrivialObject` arrays support neither).
 - `ToFName(text)` -> `FName` userdata, `index` — pre-builds FNames for UFunction arguments (Lua
@@ -101,8 +105,10 @@ Error-tolerant accessors; every helper swallows errors via `pcall` and never rai
   the name pool.
 
 ### core.maps
-- `Size(map)`, `Find(map, key)`, `Contains(map, key)`
+- `Size(map)`, `Count(map)`, `Find(map, key)`, `Contains(map, key)`
 - `ForEach(map, fn)` — `fn(key, value)`; keys are resolved, callback errors logged per element.
+- `Count(map)` — `Size` when available, otherwise counts via `ForEach` (struct-property TMaps
+  iterate fine while `#`/`Size` return nil).
 
 **Tested UE4SS build**: TMap callbacks must not return a value — a non-nil return aborts
 iteration. Early-stop is therefore unavailable; count/skip inside the closure. `pairs()` never
@@ -126,6 +132,8 @@ Introspection-driven dumpers that keep working across game updates (no hardcoded
 - `GetPlayerController()`, `GetPawn()`, `GetPlayerState()`, `GetWorld()`, `GetLevelName()`
 - `FindAll(className)` (safe `FindAllOf`, always returns a table)
 - `FindLive(className)` — first non-`Default__` valid instance (plus full name)
+- `LoadClass(packagePath, classPath)` — `StaticFindObject`, then `LoadAsset(package)` and retry
+  (for blueprint classes such as `.../WBP_X.WBP_X_C`)
 - `Distance(a, b)` (actors or vectors)
 - `ActorsInPath(pathSubstring, aroundActor, maxDistance)` — iterates all actors, filters by class
   path substring, sorts by distance
@@ -193,6 +201,58 @@ Registration is lazy: hooks are installed on first callback.
 - `Escape(state)` -> `{ TimeLeft, PlayersIn, PlayersRequired }`
 - `Criterion(name)` — e.g. `Criterion("InsurancePolicy")`; nil outside a mission
 
+### game.weapons
+- `Databases()`, `WeaponEntries(db)`, `All()`, `Find(query)`, `Resolve(value)`, `Ensure(query)` — weapon
+  database (`SBZWeaponDatabase`) and `SBZRangedWeaponData` asset discovery; `Ensure` adds a
+  `LoadAsset` fallback for path-like queries (game thread)
+- `Subobjects(weapon)` — fire/spread/recoil/targeting/sway/tanking/wall-reaction/DOF/progression refs
+- `Raw(weapon)` — plain-table stats: fire fields, spread fields, damage and
+  penetration arrays, full recoil/gun-kick struct leaves, hidden swap data
+  (`EquipNotifyTime`, `UnequipNotifyTime`, `SprintExitNotifyTime`, play rates, switch cooldown)
+- `Parts(weapon)`, `PartInfo(part)` — modular slots, part `AttributeModifierMap`, part stats asset path
+- `AttributeCurves(refresh?)`, `CurveValue(row, x)`, `AttributeValue(attribute, modifier)` —
+  live `CT_ModData_Default` TMap read with generated `game.weapons_curves` fallback
+- `AttributeParents(refresh?)`, `ModifierMultipliers(modifiers, curves?)` — parent attribute map
+  from the settings CDO (`AttributeIdentifierMap`) with a static fallback, and expansion of
+  `Overall*` modifiers into per-child curve multipliers
+- `AttributeIdentifiers(refresh?)` — the game's own attribute labels (`DisplayName`, `Context`,
+  `bIsParent`, child attributes) for human-readable modifier descriptions
+- `UiStatsAsset()`, `UiWeights()`, `UiStats(weapon)` — `SBZUIWeaponStatsAsset` weights and the
+  game's `SBZUIWeaponStatsBlueprint` bar arrays; in the cooked build the settings soft path is
+  unset and UE4SS crashes wrapping that `TSoftObjectPtr`, so only already-loaded asset
+  instances are used (returns a clean error otherwise)
+- `BarsApprox(weapon, refresh?)`, `BarRanges(refresh?)` — approximate 0..100 bars when the
+  game-computed widget values are unavailable: raw UI arrays are reduced (`BarReducers`) and
+  normalized between the min/max across all loaded weapons, so deltas stay comparable
+- `Dump(weapon, opts)`, `Json(value)`, `WriteJson(value, path)`
+
+### game.loadout
+- `Slots`, `SlotNames`, `FireTypes` — `ESBZEquippableLoadoutSlot` / `ESBZFireType` helpers
+- `ActiveConfigIndex(worldContext, slot)` — the active player loadout's config slot index
+  (`SBZLoadoutManager:GetPlayerLoadouts` + `GetActiveLoadoutIndex`; array elements are resolved
+  before field reads)
+- `EquippedConfig(slot?)` -> `config, info, err` — actually equipped weapon config
+  (`FSBZEquippableConfig`) via `SBZLoadoutLibrary:GetWeaponConfigSlot(world, slot, activeIndex)`
+  (direct returns only: this UE4SS build rejects trailing out-parameter tables), with live
+  main-menu widget fallbacks and a clean error otherwise; the by-value library copy loses the
+  attachment arrays, so the equipped `ModDataMap` comes from the live loadout weapon slot button
+  (`WBP_UI_LoadoutCustomization_WeaponSlotButton_C`, matched by `WeaponSlotIndex` + weapon path;
+  `Source = "loadout+slotbutton"`), then from live customization/mod screen configs
+- `WeaponData(config)` — weapon data asset plus `DisplayName` / path / `IsRanged`
+- `ConfigParts(config)` — equipped attachments from `ModDataMap` (+ `ModDataArray` extras) with
+  slot/part display names (localized `DisplayName`, falling back to `PrettyName` of the asset
+  name), `AttributeModifierMap` modifiers and curve-expanded multipliers
+- `PrettyName(assetName, prefix)` — `"WPD_WAR45_Mag_Extended"` + `"WPD_"` ->
+  `"WAR45 Mag Extended"`
+- `ScratchWidget()`, `ConfigBars(config)`, `DataBars(equippableData)`, `EquippedBars(slot, index)` —
+  a scratch `SBZMainMenuWeaponStatsWidget` instance (created once, never added to the viewport) is
+  asked for the game's own `SetBaseFromEquippableConfig` / `SetBaseFromEquippableData` /
+  `SetBaseFromSlot` computation, yielding the exact `BaseWeaponStats` bars, ammo and fire type
+  normalized to 0..100 (all-zero results are rejected: the native setter silently refuses a
+  config whose object references did not marshal); `DataBars` is the bare weapon without
+  attachments, `EquippedBars` the equipped config including attachments; live game widgets are
+  only ever read, never mutated
+
 ### game.heist
 - `Watch(ref, { Enter = fn(ref), Exit = fn(ref, reason) })` -> id — fires `Enter` when the
   live mission's heist ref matches and `Exit` when leaving it; keep hooks/timers idle outside
@@ -217,6 +277,27 @@ pd3lib is designed to be loaded by several mods at once:
   folder to overwrite.
 - `UnregisterKeyBind` does not exist in UE4SS; `pd3.keys.UnbindAll()` cannot remove bindings and
   logs a warning. Bindings only go away when the game (or mod) unloads.
+
+## UE4SS marshalling quirks
+
+Hard-won constraints of the PAYDAY 3 UE4SS build (all crash-dump or in-game verified):
+
+- **FText property wrappers**: resolving one (`Value:get()`) crashes UE4SS marshalling
+  (access violation in `UE4SS.dll`). Use `Safe.Text` / `Safe.TextOrNil`. Localized menu
+  FTexts can also stringify to a single space — treat whitespace as missing.
+- **By-value struct returns lose containers**: an `FSBZEquippableConfig` returned by a
+  UFunction keeps `EquippableData` but its `ModDataArray`/`ModDataMap` read empty. Read
+  from a live object property instead (e.g. a widget's struct property), which marshals
+  correctly.
+- **TArray access is inconsistent**: `#` and `GetArrayNum` can disagree; nested TArrays
+  inside structs may report `0` from both even when the native code sees elements. Prefer
+  iterating live-object properties; treat `0` with suspicion.
+- **TMap `Size`/`#` can fail while `ForEach` works** — use `Maps.Count`/`Maps.ForEach`.
+- **Out-parameter tables are not supported**: appending an out-table argument raises
+  `UFunction expected N parameters, received N+1`; only direct returns work.
+- **FName arguments**: pass the `Safe.ToFName` userdata; Lua strings crash marshalling.
+- **UFunction members are userdata with `__call`** — call them; do not `type() == "function"`
+  before calling.
 
 ## Vendoring
 

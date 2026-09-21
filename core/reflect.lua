@@ -115,6 +115,21 @@ local function ArrayElementSchemaOf(Property)
     return StructSchemaOf(Inner)
 end
 
+--- Inner FProperty of an array property (element type), else nil.
+---@param Property UObject? # FProperty
+---@return UObject? inner
+local function ArrayElementPropertyOf(Property)
+    if Property == nil then return nil end
+    local Ok, Inner = pcall(function()
+        if Property:IsA(PropertyTypes.ArrayProperty) then
+            return Property:GetInner()
+        end
+        return nil
+    end)
+    if Ok and Inner ~= nil then return Inner end
+    return nil
+end
+
 --- Clamps Text to Max chars, appending "...<+N chars>" when truncated.
 ---@param Text any
 ---@param Max integer? # 0/nil = unlimited
@@ -159,8 +174,9 @@ end
 ---@param Options pd3.Reflect.Options
 ---@param Depth integer
 ---@param ElementSchema UObject? # UScriptStruct for struct arrays
+---@param ElementProperty UObject? # inner FProperty for element formatting
 ---@return string
-local function FormatArray(Value, Options, Depth, ElementSchema)
+local function FormatArray(Value, Options, Depth, ElementSchema, ElementProperty)
     local Total = Safe.ArrayCount(Value)
     if Total == nil then return "<array unreadable>" end
     local Limit = Options.MaxArray
@@ -171,10 +187,10 @@ local function FormatArray(Value, Options, Depth, ElementSchema)
     for Index = 1, Shown do
         local Ok, Element = pcall(function() return Value[Index] end)
         if Ok then
-            if ElementSchema ~= nil and Depth > 0 then
+            if ElementSchema ~= nil then
                 Parts[#Parts + 1] = FormatStructFields(Safe.Resolve(Element), ElementSchema, Options, Depth)
             else
-                Parts[#Parts + 1] = Format(Element, Options, Depth - 1, nil)
+                Parts[#Parts + 1] = Format(Element, Options, Depth - 1, ElementProperty)
             end
         else
             Parts[#Parts + 1] = "<element error>"
@@ -209,8 +225,14 @@ Format = function(Value, Options, Depth, Property)
         return FormatStructFields(Resolved, Schema, Options, Depth)
     end
 
-    if Safe.ArrayCount(Resolved) ~= nil then
-        return FormatArray(Resolved, Options, Depth, ArrayElementSchemaOf(Property))
+    local IsArray = false
+    if Property ~= nil then
+        IsArray = PropertyTag(Property) == "ArrayProperty"
+    else
+        IsArray = Safe.ArrayCount(Resolved) ~= nil
+    end
+    if IsArray then
+        return FormatArray(Resolved, Options, Depth, ArrayElementSchemaOf(Property), ArrayElementPropertyOf(Property))
     end
 
     if HasMethod(Resolved, "GetFullName") then

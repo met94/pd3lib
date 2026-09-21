@@ -24,6 +24,8 @@
 ---@field challenge pd3.Challenge
 ---@field mission pd3.Mission
 ---@field heist pd3.Heist
+---@field weapons pd3.Weapons
+---@field loadout pd3.Loadout
 local pd3 = { Version = 2 }
 
 --- Options for pd3.Init.
@@ -64,6 +66,8 @@ pd3.core = {
 ---@field challenge pd3.Challenge
 ---@field mission pd3.Mission
 ---@field heist pd3.Heist
+---@field weapons pd3.Weapons
+---@field loadout pd3.Loadout
 pd3.game = {
     entities = require("pd3lib.game.entities"),
     interact = require("pd3lib.game.interact"),
@@ -71,6 +75,8 @@ pd3.game = {
     challenge = require("pd3lib.game.challenge"),
     mission = require("pd3lib.game.mission"),
     heist = require("pd3lib.game.heist"),
+    weapons = require("pd3lib.game.weapons"),
+    loadout = require("pd3lib.game.loadout"),
 }
 
 pd3.selftest = require("pd3lib.selftest")
@@ -90,6 +96,8 @@ pd3.shield = pd3.game.shield
 pd3.challenge = pd3.game.challenge
 pd3.mission = pd3.game.mission
 pd3.heist = pd3.game.heist
+pd3.weapons = pd3.game.weapons
+pd3.loadout = pd3.game.loadout
 
 --- Applies options (prefix, debug, selftest key) and logs the load line.
 ---@param Options? pd3lib.InitOptions

@@ -2,6 +2,8 @@
 ---@class pd3.Timers
 local Timers = {}
 
+local Log = require("pd3lib.core.log")
+
 --- Runs Fn on the next game thread tick.
 ---@param Fn fun()
 function Timers.InGameThread(Fn)
@@ -29,7 +31,10 @@ end
 ---@param Handle any
 function Timers.Cancel(Handle)
     if Handle ~= nil then
-        pcall(CancelDelayedAction, Handle)
+        local Ok, Err = pcall(CancelDelayedAction, Handle)
+        if not Ok then
+            Log.Debug("timers: Cancel failed: %s", tostring(Err))
+        end
     end
 end
 

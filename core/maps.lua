@@ -19,7 +19,20 @@ function Maps.Size(Map)
     if Map == nil then return nil end
     local Ok, Count = pcall(function() return #Map end)
     if Ok and type(Count) == "number" then return Count end
+    Log.Debug("maps: Size unavailable (%s)", tostring(Count))
     return nil
+end
+
+--- Entry count of a TMap; falls back to counting via ForEach when Size is
+--- unavailable (struct-property TMaps iterate fine while #/Size return nil).
+---@param Map TMap<any, any>?
+---@return integer count
+function Maps.Count(Map)
+    local Size = Maps.Size(Map)
+    if Size ~= nil then return Size end
+    local Count = 0
+    Maps.ForEach(Map, function() Count = Count + 1 end)
+    return Count
 end
 
 --- Looks up Key via Map:Find; nil when missing or unsupported.
@@ -30,6 +43,7 @@ function Maps.Find(Map, Key)
     if Map == nil then return nil end
     local Ok, Value = pcall(function() return Map:Find(Key) end)
     if Ok then return Value end
+    Log.Debug("maps: Find unavailable (%s)", tostring(Value))
     return nil
 end
 
@@ -40,7 +54,11 @@ end
 function Maps.Contains(Map, Key)
     if Map == nil then return false end
     local Ok, Value = pcall(function() return Map:Contains(Key) end)
-    return Ok and Value == true
+    if not Ok then
+        Log.Debug("maps: Contains unavailable (%s)", tostring(Value))
+        return false
+    end
+    return Value == true
 end
 
 --- Iterates a TMap. Fn receives (resolvedKey, rawValueWrapper); a callback

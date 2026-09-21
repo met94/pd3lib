@@ -4,6 +4,7 @@
 local World = {}
 
 local Safe = require("pd3lib.core.safe")
+local Log = require("pd3lib.core.log")
 
 local PlayerControllerCache = nil
 
@@ -57,7 +58,10 @@ function World.GetLevelName()
     if WorldObject == nil then return nil end
 
     local OkFind, GameplayStatics = pcall(StaticFindObject, "/Script/Engine.Default__GameplayStatics")
-    if not OkFind or not Safe.IsValid(GameplayStatics) then return nil end
+    if not OkFind or not Safe.IsValid(GameplayStatics) then
+        Log.Debug("world: GameplayStatics CDO unavailable")
+        return nil
+    end
 
     local Ok, Name = Safe.CallFn(GameplayStatics, "GetCurrentLevelName", WorldObject, true)
     if Ok and Name ~= nil then
@@ -72,6 +76,7 @@ end
 function World.FindAll(ClassName)
     local Ok, Result = pcall(FindAllOf, ClassName)
     if Ok and type(Result) == "table" then return Result end
+    Log.Debug("world: FindAllOf(%s) failed: %s", tostring(ClassName), tostring(Result))
     return {}
 end
 
@@ -88,6 +93,21 @@ function World.FindLive(ClassName)
             end
         end
     end
+    return nil
+end
+
+--- Finds a class by object path, loading its package first when needed.
+---@param PackagePath string # e.g. "/Game/UI/Widgets/Misc/WBP_Tooltip"
+---@param ClassPath string # e.g. "/Game/UI/Widgets/Misc/WBP_Tooltip.WBP_Tooltip_C"
+---@return UObject? class
+function World.LoadClass(PackagePath, ClassPath)
+    local Ok, Found = pcall(StaticFindObject, ClassPath)
+    if Ok and Safe.IsValid(Found) then return Found end
+    if type(LoadAsset) == "function" then
+        pcall(LoadAsset, PackagePath)
+    end
+    local OkAgain, Again = pcall(StaticFindObject, ClassPath)
+    if OkAgain and Safe.IsValid(Again) then return Again end
     return nil
 end
 
@@ -129,7 +149,9 @@ function World.ActorsInPath(PathSubstring, Around, MaxDistance)
     for _, Actor in ipairs(World.FindAll("Actor")) do
         if Safe.IsValid(Actor) then
             local OkPath, ClassPath = pcall(function() return Actor:GetClass():GetFullName() end)
-            if OkPath and ClassPath ~= nil and string.find(ClassPath, PathSubstring, 1, true) then
+            if not OkPath then
+                Log.Debug("world: actor class path failed: %s", tostring(ClassPath))
+            elseif ClassPath ~= nil and string.find(ClassPath, PathSubstring, 1, true) then
                 local Distance = nil
                 if Around ~= nil then Distance = World.Distance(Around, Actor) end
                 if MaxDistance == nil or (Distance ~= nil and Distance <= MaxDistance) then

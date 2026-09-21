@@ -1,10 +1,17 @@
 --- Error-tolerant accessors for UE4SS values. Every helper swallows errors
---- via pcall and never raises.
+--- via pcall and never raises. With Safe.Verbose enabled, swallowed errors are
+--- logged as warnings instead of disappearing.
 ---@class pd3.Safe
 local Safe = {}
 
+local Log = require("pd3lib.core.log")
+
 local Unpack = table.unpack or unpack
 local TextLibrary = nil
+
+--- When true, failed safe.* operations are logged as warnings.
+---@type boolean
+Safe.Verbose = false
 
 --- Returns true only when Value is a valid UObject (nil-safe).
 ---@param Value any
@@ -13,6 +20,21 @@ local function SafeIsValid(Value)
     if Value == nil then return false end
     local Ok, Result = pcall(function() return Value:IsValid() end)
     return Ok and Result == true
+end
+
+--- Logs a swallowed failure when Safe.Verbose is enabled.
+---@param Operation string
+---@param Obj any
+---@param Member string?
+---@param Err any
+local function Report(Operation, Obj, Member, Err)
+    if not Safe.Verbose then return end
+    local Target = Obj
+    if type(Obj) == "userdata" or type(Obj) == "table" then
+        Target = Safe.Describe(Obj)
+    end
+    Log.Warn("safe.%s(%s%s): %s", Operation, tostring(Target),
+        Member ~= nil and ("." .. tostring(Member)) or "", tostring(Err))
 end
 
 --- Returns the cached KismetTextLibrary CDO, resolving it on first use.
@@ -34,7 +56,10 @@ end
 function Safe.Call(Fn, ...)
     local Results = { pcall(Fn, ...) }
     local Ok = table.remove(Results, 1)
-    if not Ok then return false, Results[1] end
+    if not Ok then
+        Report("Call", Fn, nil, Results[1])
+        return false, Results[1]
+    end
     return true, Unpack(Results)
 end
 
@@ -45,7 +70,10 @@ end
 function Safe.Get(Obj, Name)
     if Obj == nil then return nil end
     local Ok, Value = pcall(function() return Obj[Name] end)
-    if not Ok then return nil end
+    if not Ok then
+        Report("Get", Obj, Name, Value)
+        return nil
+    end
     return Value
 end
 
@@ -56,8 +84,13 @@ end
 ---@return boolean ok
 ---@return string? err # only when Obj is nil or the write raised
 function Safe.Set(Obj, Name, Value)
-    if Obj == nil then return false, "nil object" end
-    return pcall(function() Obj[Name] = Value end)
+    if Obj == nil then
+        Report("Set", Obj, Name, "nil object")
+        return false, "nil object"
+    end
+    local Ok, Err = pcall(function() Obj[Name] = Value end)
+    if not Ok then Report("Set", Obj, Name, Err) end
+    return Ok, Ok and nil or Err
 end
 
 --- Calls Obj:Name(...) in protected mode.
@@ -67,12 +100,25 @@ end
 ---@return boolean ok
 ---@return any ... # method return values
 function Safe.CallFn(Obj, Name, ...)
-    if Obj == nil then return false, "nil object" end
+    if Obj == nil then
+        Report("CallFn", Obj, Name, "nil object")
+        return false, "nil object"
+    end
+
+    local OkMethod, Method = pcall(function() return Obj[Name] end)
+    if not OkMethod then
+        Report("CallFn", Obj, Name, Method)
+        return false, Method
+    end
+
     local Args = { ... }
     local ArgCount = select("#", ...)
-    return Safe.Call(function()
-        return Obj[Name](Obj, Unpack(Args, 1, ArgCount))
-    end)
+    local Results = { pcall(Method, Obj, Unpack(Args, 1, ArgCount)) }
+    local Ok = table.remove(Results, 1)
+    if not Ok then
+        Report("CallFn", Obj, Name, Results[1])
+    end
+    return Ok, Unpack(Results)
 end
 
 --- Returns true only when Value is a valid UObject.
@@ -132,6 +178,20 @@ function Safe.Text(Value)
     return Safe.Describe(Value)
 end
 
+--- FText -> trimmed Lua string; nil for nil, empty, whitespace-only or "nil"
+--- results. Menu FText properties can stringify to a single space in this
+--- build, so callers must treat whitespace as missing.
+---@param Value any
+---@return string? text
+function Safe.TextOrNil(Value)
+    if Value == nil then return nil end
+    local Text = Safe.Text(Value)
+    if type(Text) ~= "string" then return nil end
+    local Trimmed = string.match(Text, "^%s*(.-)%s*$")
+    if Trimmed == nil or Trimmed == "" or Trimmed == "nil" then return nil end
+    return Trimmed
+end
+
 --- Returns true when Value[MemberName] is readable and non-nil.
 ---@param Value any
 ---@param MemberName string
@@ -147,6 +207,9 @@ end
 ---   * UObject derivatives and unknown wrappers pass through unchanged
 --- Never invokes object methods on unknown wrappers: calling e.g. GetFullName
 --- on a name/param wrapper crashes UE4SS marshalling (push_nameproperty).
+--- Never call this on FText property wrappers either: the :get() path crashed
+--- UE4SS marshalling (dump-verified access violation in UE4SS.dll); use
+--- Safe.Text or Safe.TextOrNil for text values instead.
 ---@param Value any
 ---@param Depth? integer # internal recursion guard, max 3; omit when calling
 ---@return any resolved
@@ -192,6 +255,7 @@ function Safe.ArrayCount(Value)
     if OkCount and type(Count) == "number" then return Count end
     local OkNum, Num = pcall(function() return Value:GetArrayNum() end)
     if OkNum and type(Num) == "number" then return Num end
+    Report("ArrayCount", Value, nil, tostring(Count) .. " / " .. tostring(Num))
     return nil
 end
 
