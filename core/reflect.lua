@@ -503,4 +503,15 @@ function Reflect.DumpEnum(EnumOrName, Opts)
     return Lines
 end
 
+--- Live memory address of an object (`UObject:GetAddress`), nil when
+--- unavailable. Used by debugger recipes and address logging; never raises.
+---@param Target any
+---@return integer? address
+function Reflect.AddressOf(Target)
+    if Target == nil then return nil end
+    local Ok, Address = Safe.CallFn(Target, "GetAddress")
+    if not Ok or type(Address) ~= "number" then return nil end
+    return math.floor(Address)
+end
+
 return Reflect

@@ -7,7 +7,8 @@
 
 
 Error-tolerant accessors for UE4SS values. Every helper swallows errors
-via pcall and never raises.
+via pcall and never raises. With Safe.Verbose enabled, swallowed errors are
+logged as warnings instead of disappearing.
 
 
 
@@ -191,6 +192,27 @@ Conv_TextToString and finally Safe.Describe.
 
 
 
+### Safe.TextOrNil
+---
+```lua
+function Safe.TextOrNil(Value: any) -> text string?
+```
+
+
+
+
+
+FText -> trimmed Lua string; nil for nil, empty, whitespace-only or "nil"
+results. Menu FText properties can stringify to a single space in this
+build, so callers must treat whitespace as missing.
+
+
+
+
+
+
+
+
 ### Safe.Resolve
 ---
 ```lua
@@ -212,6 +234,9 @@ Unwraps UE4SS value wrappers to the underlying value:
   * UObject derivatives and unknown wrappers pass through unchanged
 Never invokes object methods on unknown wrappers: calling e.g. GetFullName
 on a name/param wrapper crashes UE4SS marshalling (push_nameproperty).
+Never call this on FText property wrappers either: the :get() path crashed
+UE4SS marshalling (dump-verified access violation in UE4SS.dll); use
+Safe.Text or Safe.TextOrNil for text values instead.
 
 
 
@@ -326,6 +351,27 @@ function Safe.Num(
 Returns Value when it is a number, Default otherwise.
 
 
+
+
+
+
+
+
+
+
+
+## fields
+---
+
+### Safe.Verbose
+---
+```lua
+Safe.Verbose : boolean
+```
+
+
+
+When true, failed safe.* operations are logged as warnings.
 
 
 

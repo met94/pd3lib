@@ -10,6 +10,8 @@ local Timers = require("pd3lib.core.timers")
 local Maps = require("pd3lib.core.maps")
 local Reflect = require("pd3lib.core.reflect")
 local Entities = require("pd3lib.game.entities")
+local Attributes = require("pd3lib.game.attributes")
+local Weapons = require("pd3lib.game.weapons")
 local Interact = require("pd3lib.game.interact")
 local Shield = require("pd3lib.game.shield")
 local Challenge = require("pd3lib.game.challenge")
@@ -158,6 +160,39 @@ local function DefaultChecks()
                 if State == nil then return true, "no live mission (menu)" end
                 local Difficulty, Name = Mission.Difficulty(State)
                 return true, string.format("difficulty=%s heistRef=%s", tostring(Name), tostring(Mission.HeistRef(State)))
+            end,
+        },
+        {
+            Name = "attributes.Current (player Health)",
+            Fn = function()
+                local Set = nil
+                for _, Candidate in ipairs(World.FindAll("SBZPlayerAttributeSet")) do
+                    if Safe.IsValid(Candidate) then
+                        Set = Candidate
+                        break
+                    end
+                end
+                if Set == nil then return true, "no player attribute set in this context" end
+                local Current, Base = Attributes.Values(Set, "Health")
+                return Current ~= nil, string.format("Health=%s base=%s", tostring(Current), tostring(Base))
+            end,
+        },
+        {
+            Name = "reflect.AddressOf",
+            Fn = function()
+                local Address = Reflect.AddressOf(World.GetPawn())
+                return Address ~= nil, string.format("pawn=0x%X", Address or 0)
+            end,
+        },
+        {
+            Name = "weapons falloff bands",
+            Fn = function()
+                local Weapon = Weapons.Ensure("DA_WeaponData_AssaultRifle_CAR4")
+                local Raw = Weapons.Raw(Weapon)
+                local Damage = Weapons.DamageAtDistance(Raw, 10)
+                local Crit = Weapons.CritMultiplierAtDistance(Raw, 10)
+                return Damage ~= nil and Crit ~= nil,
+                    string.format("dmg@10m=%s crit@10m=%s", tostring(Damage), tostring(Crit))
             end,
         },
     }

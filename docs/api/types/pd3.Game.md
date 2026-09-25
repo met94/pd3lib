@@ -50,6 +50,26 @@ Game.entities : pd3.Entities {
 
 
 
+### Game.attributes
+---
+```lua
+Game.attributes : pd3.Attributes {
+    Layout: table<string,(string|integer)>,
+    Values: function,
+    Current: function,
+    Base: function,
+}
+```
+
+
+
+
+
+
+
+
+
+
 ### Game.interact
 ---
 ```lua
@@ -170,6 +190,65 @@ Game.heist : pd3.Heist {
     Unwatch: function,
     Active: function,
     Probe: function,
+}
+```
+
+
+
+
+
+
+
+
+
+
+### Game.weapons
+---
+```lua
+Game.weapons : pd3.Weapons {
+    DatabaseClass: string,
+    RangedClass: string,
+    CurveTablePath: string,
+    ModificationSettingsPath: string,
+    NoValue: number,
+    AttributeNames: table<integer,string>,
+    _Curves: { Source = string, Live = boolean, Rows = any },
+    ParentFallback: table<string,string[]>,
+    _Identifiers: table,
+    _Parents: table,
+    _UiAsset: any,
+    BarReducers: table<string,string>,
+    AttributeName: function,
+    ...(+29)
+}
+```
+
+
+
+
+
+
+
+
+
+
+### Game.loadout
+---
+```lua
+Game.loadout : pd3.Loadout {
+    Slots: table<string,integer>,
+    SlotNames: table<integer,string>,
+    FireTypes: table<integer,string>,
+    LibraryPath: string,
+    WidgetCandidates: { Class: string, Name: string, Package: string }[],
+    ConfigWidgetCandidates: { Class: string, Name: string, Package: string }[],
+    SlotButtonCandidates: { Class: string, Name: string, Package: string }[],
+    StatFields: string[],
+    _ScratchWidget: UObject?,
+    _ScratchClass: string?,
+    ActiveConfigIndex: function,
+    ScratchWidget: function,
+    ...(+9)
 }
 ```
 

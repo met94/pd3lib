@@ -8,6 +8,16 @@ compatibility line.
 
 ### Added
 
+- `game.attributes` — live `FGameplayAttributeData` reads (`Values`, `Current`, `Base`) with
+  plain-number passthrough and nil-safe missing fields, plus a build-tagged `Layout` constant
+  for raw-memory/debugger work (FGameplayAttributeData = 16 bytes, Base @ +8, Current @ +12 on
+  build 5.5.4).
+- `game.weapons` — `DamageAtDistance(raw, meters)` and `CritMultiplierAtDistance(raw, meters)`:
+  the native hit-time band semantics (damage: first falloff entry with distance >= the shot,
+  else the last; crit: first entry strictly beyond, else the last), matching
+  `FUN_144d16f68` / `FUN_144d12fac`.
+- `core.reflect` — `AddressOf(object)`: nil-safe `UObject:GetAddress` wrapper for debugger
+  recipes and address logging.
 - `game.weapons` — weapon database/entry enumeration (`Databases`, `All`, `Find`,
   `Ensure` with a `LoadAsset` fallback),
   raw and hidden stat reads (`Raw`: fire, spread, recoil/gun-kick, swap notify times

@@ -154,6 +154,32 @@ Like FindFirstOf, but skips class default objects and invalid entries.
 
 
 
+### World.LoadClass
+---
+```lua
+function World.LoadClass(
+  PackagePath: string,
+  ClassPath: string
+) -> class UObject?
+```
+@param `PackagePath` - e.g. "/Game/UI/Widgets/Misc/WBP_Tooltip"
+
+@param `ClassPath` - e.g. "/Game/UI/Widgets/Misc/WBP_Tooltip.WBP_Tooltip_C"
+
+
+
+
+
+
+Finds a class by object path, loading its package first when needed.
+
+
+
+
+
+
+
+
 ### World.Distance
 ---
 ```lua

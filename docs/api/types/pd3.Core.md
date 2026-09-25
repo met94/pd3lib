@@ -49,6 +49,7 @@ Core.log : pd3.Log {
 ---
 ```lua
 Core.safe : pd3.Safe {
+    Verbose: boolean,
     Call: function,
     Get: function,
     Set: function,
@@ -56,12 +57,11 @@ Core.safe : pd3.Safe {
     IsValid: function,
     Describe: function,
     Text: function,
+    TextOrNil: function,
     Resolve: function,
     String: function,
     ArrayCount: function,
-    ToFName: function,
-    Count: function,
-    ...(+1)
+    ...(+3)
 }
 ```
 
@@ -85,10 +85,12 @@ Core.world : pd3.World {
     GetLevelName: function,
     FindAll: function,
     FindLive: function,
+    LoadClass: function,
     Distance: function,
     ActorsInPath: function,
     HasAuthority: function,
     Owner: function,
+    ...(+0)
 }
 ```
 
@@ -188,6 +190,7 @@ Core.lifecycle : pd3.Lifecycle {
 ```lua
 Core.maps : pd3.Maps {
     Size: function,
+    Count: function,
     Find: function,
     Contains: function,
     ForEach: function,
@@ -218,6 +221,8 @@ Core.reflect : pd3.Reflect {
     DumpStruct: function,
     DumpClass: function,
     DumpEnum: function,
+    AddressOf: function,
+    ...(+0)
 }
 ```
 

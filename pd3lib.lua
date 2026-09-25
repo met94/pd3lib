@@ -19,6 +19,7 @@
 ---@field maps pd3.Maps
 ---@field reflect pd3.Reflect
 ---@field entities pd3.Entities
+---@field attributes pd3.Attributes
 ---@field interact pd3.Interact
 ---@field shield pd3.Shield
 ---@field challenge pd3.Challenge
@@ -61,6 +62,7 @@ pd3.core = {
 --- Payday 3 specific modules.
 ---@class pd3.Game
 ---@field entities pd3.Entities
+---@field attributes pd3.Attributes
 ---@field interact pd3.Interact
 ---@field shield pd3.Shield
 ---@field challenge pd3.Challenge
@@ -70,6 +72,7 @@ pd3.core = {
 ---@field loadout pd3.Loadout
 pd3.game = {
     entities = require("pd3lib.game.entities"),
+    attributes = require("pd3lib.game.attributes"),
     interact = require("pd3lib.game.interact"),
     shield = require("pd3lib.game.shield"),
     challenge = require("pd3lib.game.challenge"),
@@ -91,6 +94,7 @@ pd3.lifecycle = pd3.core.lifecycle
 pd3.maps = pd3.core.maps
 pd3.reflect = pd3.core.reflect
 pd3.entities = pd3.game.entities
+pd3.attributes = pd3.game.attributes
 pd3.interact = pd3.game.interact
 pd3.shield = pd3.game.shield
 pd3.challenge = pd3.game.challenge

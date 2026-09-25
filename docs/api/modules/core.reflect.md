@@ -257,6 +257,26 @@ Dumps an enum's names and values.
 
 
 
+### Reflect.AddressOf
+---
+```lua
+function Reflect.AddressOf(Target: any) -> address integer?
+```
+
+
+
+
+
+Live memory address of an object (`UObject:GetAddress`), nil when
+unavailable. Used by debugger recipes and address logging; never raises.
+
+
+
+
+
+
+
+
 
 
 

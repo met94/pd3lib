@@ -45,6 +45,26 @@ Entry count of a TMap, or nil when the map type does not support #.
 
 
 
+### Maps.Count
+---
+```lua
+function Maps.Count(Map: unknown) -> count integer
+```
+
+
+
+
+
+Entry count of a TMap; falls back to counting via ForEach when Size is
+unavailable (struct-property TMaps iterate fine while #/Size return nil).
+
+
+
+
+
+
+
+
 ### Maps.Find
 ---
 ```lua

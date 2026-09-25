@@ -515,6 +515,57 @@ function Weapons.Raw(Weapon)
     return Stats
 end
 
+--- Distance-band lookup over the raw FireData arrays (entries sorted ascending
+--- by Distance in cm, fields as produced by Weapons.Raw).
+--- Damage uses the native inclusive band (first entry with Distance >= query,
+--- else the last one, matching FUN_144d16f68); the critical multiplier uses the
+--- strict band (first entry with Distance > query, else the last one, matching
+--- FUN_144d12fac).
+---@param Entries table[]? # Weapon.Raw().Damage.DamageDistance or CriticalDamageMultiplierDistance
+---@param Field string # "Damage" or "Multiplier"
+---@param Meters number
+---@param Strict boolean # true = first entry strictly beyond the distance
+---@return number? value
+local function BandAtDistance(Entries, Field, Meters, Strict)
+    if type(Entries) ~= "table" or #Entries == 0 then return nil end
+    local Distance = Meters * 100
+    local Last = nil
+    for _, Entry in ipairs(Entries) do
+        local Value = NumOf(Entry[Field])
+        local EntryDistance = NumOf(Entry.Distance)
+        if Value ~= nil and EntryDistance ~= nil then
+            Last = Value
+            local Beyond = Strict and Distance < EntryDistance or not Strict and Distance <= EntryDistance
+            if Beyond then return Value end
+        end
+    end
+    return Last
+end
+
+--- Damage at a distance in meters using the native falloff band semantics
+--- (first DamageDistanceArray entry whose distance is >= the shot, else the
+--- last entry).
+---@param Raw table? # Weapons.Raw() result
+---@param Meters number
+---@return number? damage
+function Weapons.DamageAtDistance(Raw, Meters)
+    if type(Meters) ~= "number" then return nil end
+    local Entries = Raw ~= nil and Raw.Damage ~= nil and Raw.Damage.DamageDistance or nil
+    return BandAtDistance(Entries, "Damage", Meters, false)
+end
+
+--- Critical-damage multiplier at a distance in meters using the native strict
+--- band semantics (first CriticalDamageMultiplierDistanceArray entry whose
+--- distance is strictly greater than the shot, else the last entry).
+---@param Raw table? # Weapons.Raw() result
+---@param Meters number
+---@return number? multiplier
+function Weapons.CritMultiplierAtDistance(Raw, Meters)
+    if type(Meters) ~= "number" then return nil end
+    local Entries = Raw ~= nil and Raw.Damage ~= nil and Raw.Damage.CriticalDamageMultiplierDistance or nil
+    return BandAtDistance(Entries, "Multiplier", Meters, true)
+end
+
 --- Modular slots of a weapon; entries are
 --- { Slot, SlotName, DefaultPart, UniqueParts, SharedParts }.
 --- SharedParts flattens USBZSharedPartList assets into their part assets.

@@ -201,6 +201,15 @@ Registration is lazy: hooks are installed on first callback.
 - `Escape(state)` -> `{ TimeLeft, PlayersIn, PlayersRequired }`
 - `Criterion(name)` — e.g. `Criterion("InsurancePolicy")`; nil outside a mission
 
+### game.attributes
+- `Values(set, field)` -> `current, base` — live `FGameplayAttributeData` reads from any
+  attribute set (`SBZPawnAttributeSet`, player set, tank/shield sets). `FGameplayAttributeData`
+  members resolve to `CurrentValue` / `BaseValue`, plain numeric properties return the number
+  for both, missing fields return nil
+- `Current(set, field)`, `Base(set, field)` — single-value shortcuts
+- `Layout` — raw-memory layout reference for debugger work (build tag, struct size, base and
+  current offsets); the reflection reads above do not depend on it
+
 ### game.weapons
 - `Databases()`, `WeaponEntries(db)`, `All()`, `Find(query)`, `Resolve(value)`, `Ensure(query)` — weapon
   database (`SBZWeaponDatabase`) and `SBZRangedWeaponData` asset discovery; `Ensure` adds a
@@ -209,6 +218,10 @@ Registration is lazy: hooks are installed on first callback.
 - `Raw(weapon)` — plain-table stats: fire fields, spread fields, damage and
   penetration arrays, full recoil/gun-kick struct leaves, hidden swap data
   (`EquipNotifyTime`, `UnequipNotifyTime`, `SprintExitNotifyTime`, play rates, switch cooldown)
+- `DamageAtDistance(raw, meters)`, `CritMultiplierAtDistance(raw, meters)` — native hit-time
+  band semantics: damage uses the first `DamageDistanceArray` entry whose distance is >= the
+  shot (else the last), the critical multiplier the first entry strictly beyond it (else the
+  last); both take the `Raw` table and meters
 - `Parts(weapon)`, `PartInfo(part)` — modular slots, part `AttributeModifierMap`, part stats asset path
 - `AttributeCurves(refresh?)`, `CurveValue(row, x)`, `AttributeValue(attribute, modifier)` —
   live `CT_ModData_Default` TMap read with generated `game.weapons_curves` fallback
@@ -308,6 +321,9 @@ Hard-won constraints of the PAYDAY 3 UE4SS build (all crash-dump or in-game veri
 - **FName arguments**: pass the `Safe.ToFName` userdata; Lua strings crash marshalling.
 - **UFunction members are userdata with `__call`** — call them; do not `type() == "function"`
   before calling.
+- **`LoadAsset` only works on the game thread** — keybind callbacks run on the input thread and
+  get `Function 'LoadAsset' can only be called from within the game thread`; defer with
+  `pd3.timers.InGameThread(fn)` / `pd3.timers.After(ms, fn)`.
 
 ## Vendoring
 

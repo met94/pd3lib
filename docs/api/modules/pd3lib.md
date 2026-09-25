@@ -30,11 +30,14 @@ function pd3lib.Init(Options: pd3lib.InitOptions?) -> pd3 pd3lib {
     maps = pd3.Maps,
     reflect = pd3.Reflect,
     entities = pd3.Entities,
+    attributes = pd3.Attributes,
     interact = pd3.Interact,
     shield = pd3.Shield,
     challenge = pd3.Challenge,
     mission = pd3.Mission,
     heist = pd3.Heist,
+    weapons = pd3.Weapons,
+    loadout = pd3.Loadout,
     Init = function,
     Unload = function,
 }
@@ -130,11 +133,14 @@ module table (pd3lib.core.*)
 ```lua
 pd3lib.game : pd3.Game {
     entities: pd3.Entities,
+    attributes: pd3.Attributes,
     interact: pd3.Interact,
     shield: pd3.Shield,
     challenge: pd3.Challenge,
     mission: pd3.Mission,
     heist: pd3.Heist,
+    weapons: pd3.Weapons,
+    loadout: pd3.Loadout,
 }
 ```
 
@@ -195,6 +201,7 @@ pd3lib.log : pd3.Log {
 ---
 ```lua
 pd3lib.safe : pd3.Safe {
+    Verbose: boolean,
     Call: function,
     Get: function,
     Set: function,
@@ -202,12 +209,11 @@ pd3lib.safe : pd3.Safe {
     IsValid: function,
     Describe: function,
     Text: function,
+    TextOrNil: function,
     Resolve: function,
     String: function,
     ArrayCount: function,
-    ToFName: function,
-    Count: function,
-    ...(+1)
+    ...(+3)
 }
 ```
 
@@ -231,10 +237,12 @@ pd3lib.world : pd3.World {
     GetLevelName: function,
     FindAll: function,
     FindLive: function,
+    LoadClass: function,
     Distance: function,
     ActorsInPath: function,
     HasAuthority: function,
     Owner: function,
+    ...(+0)
 }
 ```
 
@@ -334,6 +342,7 @@ pd3lib.lifecycle : pd3.Lifecycle {
 ```lua
 pd3lib.maps : pd3.Maps {
     Size: function,
+    Count: function,
     Find: function,
     Contains: function,
     ForEach: function,
@@ -364,6 +373,8 @@ pd3lib.reflect : pd3.Reflect {
     DumpStruct: function,
     DumpClass: function,
     DumpEnum: function,
+    AddressOf: function,
+    ...(+0)
 }
 ```
 
@@ -393,6 +404,26 @@ pd3lib.entities : pd3.Entities {
     AIInteractorOf: function,
     IsSurrendered: function,
     ...(+0)
+}
+```
+
+
+
+
+
+
+
+
+
+
+### pd3lib.attributes
+---
+```lua
+pd3lib.attributes : pd3.Attributes {
+    Layout: table<string,(string|integer)>,
+    Values: function,
+    Current: function,
+    Base: function,
 }
 ```
 
@@ -525,6 +556,65 @@ pd3lib.heist : pd3.Heist {
     Unwatch: function,
     Active: function,
     Probe: function,
+}
+```
+
+
+
+
+
+
+
+
+
+
+### pd3lib.weapons
+---
+```lua
+pd3lib.weapons : pd3.Weapons {
+    DatabaseClass: string,
+    RangedClass: string,
+    CurveTablePath: string,
+    ModificationSettingsPath: string,
+    NoValue: number,
+    AttributeNames: table<integer,string>,
+    _Curves: { Source = string, Live = boolean, Rows = any },
+    ParentFallback: table<string,string[]>,
+    _Identifiers: table,
+    _Parents: table,
+    _UiAsset: any,
+    BarReducers: table<string,string>,
+    AttributeName: function,
+    ...(+29)
+}
+```
+
+
+
+
+
+
+
+
+
+
+### pd3lib.loadout
+---
+```lua
+pd3lib.loadout : pd3.Loadout {
+    Slots: table<string,integer>,
+    SlotNames: table<integer,string>,
+    FireTypes: table<integer,string>,
+    LibraryPath: string,
+    WidgetCandidates: { Class: string, Name: string, Package: string }[],
+    ConfigWidgetCandidates: { Class: string, Name: string, Package: string }[],
+    SlotButtonCandidates: { Class: string, Name: string, Package: string }[],
+    StatFields: string[],
+    _ScratchWidget: UObject?,
+    _ScratchClass: string?,
+    ActiveConfigIndex: function,
+    ScratchWidget: function,
+    ...(+9)
 }
 ```
 
