@@ -50,6 +50,48 @@ function Mission.Difficulty(State)
     return Value, Mission.DifficultyNames[Value] or ("Unknown(" .. Value .. ")")
 end
 
+--- Display name of a difficulty index (nil for non-numbers).
+---@param Index any
+---@return string? name
+function Mission.DifficultyName(Index)
+    if type(Index) ~= "number" then return nil end
+    return Mission.DifficultyNames[Index] or ("Unknown(" .. Index .. ")")
+end
+
+--- Live difficulty index from SBZMissionState:GetDifficultyIdx().
+---@param State? UObject # defaults to Mission.Get()
+---@return integer? index
+function Mission.DifficultyIdx(State)
+    local Live = State or Mission.Get()
+    if Live == nil then return nil end
+    local Ok, Value = Safe.CallFn(Live, "GetDifficultyIdx")
+    if Ok and type(Value) == "number" then return Value end
+    return nil
+end
+
+--- UNSAFE / CHEATS — state-mutating difficulty change for test rigs and
+--- training areas, not for normal gameplay. Calls
+--- `SBZGameInstance:SetDifficulty(idx)`; the live index can be read back with
+--- `Mission.DifficultyIdx()`. Verified in the Shooting Range: F10-style
+--- SetDifficulty(1) flips GetDifficultyIdx 0 -> 1. Notes:
+---   * affects newly spawned pawns only; existing AI keeps its difficulty
+---   * game thread only (use pd3.timers.InGameThread from keybind callbacks)
+---   * may desync from the matchmaking/backend difficulty; restore it or
+---     return to the menu when done
+---@param Index integer # 0 Normal, 1 Hard, 2 VeryHard, 3 Overkill
+---@return boolean ok
+---@return string? err
+function Mission.SetDifficultyIdx(Index)
+    if type(Index) ~= "number" then return false, "difficulty index must be a number" end
+
+    local GameInstance = World.FindLive("SBZGameInstance") or World.FindLive("GameInstance")
+    if GameInstance == nil then return false, "no game instance" end
+
+    local Ok, Err = Safe.CallFn(GameInstance, "SetDifficulty", Index)
+    if not Ok then return false, tostring(Err) end
+    return true
+end
+
 --- The mission's CurrentHeistData object.
 ---@param State? UObject # defaults to Mission.Get()
 ---@return UObject? heistData

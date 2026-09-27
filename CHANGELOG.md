@@ -60,6 +60,38 @@ compatibility line.
   (screen-independent, `Source = "loadout+widget"`); `EquippedConfig` info gains
   `BaseEquippableData`, and `WeaponData(config, dataOverride)` reports the base asset
   when the config holds a runtime copy.
+- `core.classes` — class resolution with the ordered variants `LoadAsset(object)`,
+  `StaticFindObject(object)`, `LoadAsset(package)`, `StaticFindObject(package)` (Blueprint
+  assets unwrap to `GeneratedClass`) plus an incremental, non-fatal load queue
+  (`NewLoader` with per-tick budget, retry cap, "gave up" state and `RetryFailed`) so one
+  bad class never aborts a roster.
+- `game.spawn` — direct spawning (`Statics`, `ActorFromClass`, `Destroy`) through
+  Kismet-built transforms and `BeginDeferredActorSpawnFromClass`/`FinishSpawningActor`
+  (script classes resolved with `StaticFindObject`; no Lua globals), plus the pure
+  placement math (`OffsetLocation`, `FacingYaw`, `YawRadians`).
+- `game.ai` — `FreezePawn(pawn, reason)` (`SetAIEnabled(false, FName)`) with
+  `LastDisabledReason` dedupe, a per-class unsupported-controller cache (`IsFreezeUnsupported`,
+  logged once) and `NeedsFreeze`/`ControllerOf`/`FrozenCount`/`Reset`.
+- `game.weapons` — `EquippedFireDataLive()` (in-heist equipped weapon FireData via
+  `PlayerController.Pawn.CurrentEquippableConfig.EquippableData.FireData`, fallback
+  `.CurrentEquippable...`) and falloff breakpoints (`DistanceFieldCm`, `BreakpointsCm`,
+  `BreakpointsMeters`, pure `DistancesFromCm` union in meters).
+- `game.mission` — `DifficultyName(index)`, `DifficultyIdx(state?)` and the
+  UNSAFE/testing-only `SetDifficultyIdx(index)` (`SBZGameInstance:SetDifficulty`; affects
+  newly spawned pawns only).
+- `core.world` — `PruneValid(list, onLost)`: drops invalid objects with a per-entry
+  callback, for tick-loop pruning before property reads.
+- Tests — engine-free fengari suites under `tests/` (`tests/run_all.lua`) covering the pure
+  parts of safe/world/classes/spawn/ai/weapons/mission.
+- `docs/knowledge-base.md` — "Direct-spawned pawns and kill-hook mods" (native crash
+  mechanism, isolation matrix, guidance) and "Dead ends" (cheat-manager spawn, assault
+  director in the Shooting Range, missing script-class Lua globals, `LoadAsset` limits).
+
+### Changed
+
+- `core.safe` — `IsValid` prefers the UE4SS global `IsValid` when the build exposes it and
+  falls back to the object method; docs call out that stale-handle property reads fault
+  natively beyond `pcall` (validate before every read in tick loops).
 
 ## [2.1.1] - 2026-09-17
 

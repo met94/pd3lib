@@ -111,6 +111,38 @@ function World.LoadClass(PackagePath, ClassPath)
     return nil
 end
 
+--- Drops entries that are no longer valid UObjects, calling OnLost(entry, index)
+--- for each dropped one (callback errors are logged, not raised). The original
+--- list is returned unchanged when nothing was lost. Iterate the survivor list
+--- on the next tick and re-resolve, never keep reading properties of entries
+--- that failed this check: stale handles crash natively inside UE4SS, beyond
+--- pcall's reach (see Safe.IsValid).
+---@param List UObject[]?
+---@param OnLost fun(entry: any, index: integer)?
+---@return UObject[] survivors
+---@return integer lostCount
+function World.PruneValid(List, OnLost)
+    if type(List) ~= "table" then return {}, 0 end
+
+    local Survivors, Lost = {}, 0
+    for Index, Entry in ipairs(List) do
+        if Safe.IsValid(Entry) then
+            Survivors[#Survivors + 1] = Entry
+        else
+            Lost = Lost + 1
+            if OnLost ~= nil then
+                local Ok, Err = pcall(OnLost, Entry, Index)
+                if not Ok then
+                    Log.Warn("world.PruneValid onLost error: %s", tostring(Err))
+                end
+            end
+        end
+    end
+
+    if Lost == 0 then return List, 0 end
+    return Survivors, Lost
+end
+
 --- Returns Value when it is a vector (has numeric .X), else K2_GetActorLocation
 --- when it is an actor, else nil.
 ---@param Value any

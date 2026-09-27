@@ -161,14 +161,14 @@ Game.mission : pd3.Mission {
     HeistStateNames: table<integer,string>,
     Get: function,
     Difficulty: function,
+    DifficultyName: function,
+    DifficultyIdx: function,
+    SetDifficultyIdx: function,
     HeistData: function,
     HeistRef: function,
     Escape: function,
     Criterion: function,
-    DumpCriterion: function,
-    DumpHeistData: function,
-    DumpMissionResult: function,
-    ...(+0)
+    ...(+3)
 }
 ```
 
@@ -219,7 +219,7 @@ Game.weapons : pd3.Weapons {
     _UiAsset: any,
     BarReducers: table<string,string>,
     AttributeName: function,
-    ...(+29)
+    ...(+34)
 }
 ```
 
@@ -249,6 +249,54 @@ Game.loadout : pd3.Loadout {
     ActiveConfigIndex: function,
     ScratchWidget: function,
     ...(+9)
+}
+```
+
+
+
+
+
+
+
+
+
+
+### Game.spawn
+---
+```lua
+Game.spawn : pd3.Spawn {
+    AlwaysSpawn: integer,
+    TransformScale: integer,
+    KismetPath: string,
+    GameplayStaticsPath: string,
+    YawRadians: function,
+    FacingYaw: function,
+    OffsetLocation: function,
+    Statics: function,
+    ActorFromClass: function,
+    Destroy: function,
+}
+```
+
+
+
+
+
+
+
+
+
+
+### Game.ai
+---
+```lua
+Game.ai : pd3.AI {
+    NeedsFreeze: function,
+    ControllerOf: function,
+    FreezePawn: function,
+    IsFreezeUnsupported: function,
+    FrozenCount: function,
+    Reset: function,
 }
 ```
 

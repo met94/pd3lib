@@ -180,6 +180,36 @@ Finds a class by object path, loading its package first when needed.
 
 
 
+### World.PruneValid
+---
+```lua
+function World.PruneValid(
+  List: UObject[]?,
+  OnLost: (fun(entry: any, index: integer))?
+)
+ -> survivors UObject[]
+ -> lostCount integer
+
+```
+
+
+
+
+
+Drops entries that are no longer valid UObjects, calling OnLost(entry, index)
+for each dropped one (callback errors are logged, not raised). The original
+list is returned unchanged when nothing was lost. Iterate the survivor list
+on the next tick and re-resolve, never keep reading properties of entries
+that failed this check: stale handles crash natively inside UE4SS, beyond
+pcall's reach (see Safe.IsValid).
+
+
+
+
+
+
+
+
 ### World.Distance
 ---
 ```lua

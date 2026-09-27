@@ -69,6 +69,78 @@ Mission difficulty value and display name.
 
 
 
+### Mission.DifficultyName
+---
+```lua
+function Mission.DifficultyName(Index: any) -> name string?
+```
+
+
+
+
+
+Display name of a difficulty index (nil for non-numbers).
+
+
+
+
+
+
+
+
+### Mission.DifficultyIdx
+---
+```lua
+function Mission.DifficultyIdx(State: UObject?) -> index integer?
+```
+@param `State` - defaults to Mission.Get()
+
+
+
+
+
+
+Live difficulty index from SBZMissionState:GetDifficultyIdx().
+
+
+
+
+
+
+
+
+### Mission.SetDifficultyIdx
+---
+```lua
+function Mission.SetDifficultyIdx(Index: integer)
+ -> ok boolean
+ -> err string?
+
+```
+@param `Index` - 0 Normal, 1 Hard, 2 VeryHard, 3 Overkill
+
+
+
+
+
+
+UNSAFE / CHEATS — state-mutating difficulty change for test rigs and
+training areas, not for normal gameplay. Calls
+`SBZGameInstance:SetDifficulty(idx)`; the live index can be read back with
+`Mission.DifficultyIdx()`. Verified in the Shooting Range: F10-style
+SetDifficulty(1) flips GetDifficultyIdx 0 -> 1. Notes:
+  * affects newly spawned pawns only; existing AI keeps its difficulty
+  * game thread only (use pd3.timers.InGameThread from keybind callbacks)
+  * may desync from the matchmaking/backend difficulty; restore it or
+    return to the menu when done
+
+
+
+
+
+
+
+
 ### Mission.HeistData
 ---
 ```lua

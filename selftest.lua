@@ -9,6 +9,7 @@ local Hooks = require("pd3lib.core.hooks")
 local Timers = require("pd3lib.core.timers")
 local Maps = require("pd3lib.core.maps")
 local Reflect = require("pd3lib.core.reflect")
+local Classes = require("pd3lib.core.classes")
 local Entities = require("pd3lib.game.entities")
 local Attributes = require("pd3lib.game.attributes")
 local Weapons = require("pd3lib.game.weapons")
@@ -16,6 +17,7 @@ local Interact = require("pd3lib.game.interact")
 local Shield = require("pd3lib.game.shield")
 local Challenge = require("pd3lib.game.challenge")
 local Mission = require("pd3lib.game.mission")
+local AI = require("pd3lib.game.ai")
 
 local ExtraChecks = {}
 
@@ -193,6 +195,44 @@ local function DefaultChecks()
                 local Crit = Weapons.CritMultiplierAtDistance(Raw, 10)
                 return Damage ~= nil and Crit ~= nil,
                     string.format("dmg@10m=%s crit@10m=%s", tostring(Damage), tostring(Crit))
+            end,
+        },
+        {
+            Name = "safe.IsValid global",
+            Fn = function()
+                return type(IsValid) == "function", "UE4SS global IsValid " ..
+                    (type(IsValid) == "function" and "available" or "MISSING (method fallback)")
+            end,
+        },
+        {
+            Name = "classes variant order",
+            Fn = function()
+                local Variants = Classes.Variants("/Game/X.Y_C")
+                local Ordered = #Variants == 4 and Variants[1].Kind == "LoadAsset"
+                    and Variants[2].Kind == "FindObject"
+                return Ordered, string.format("%d variants", #Variants)
+            end,
+        },
+        {
+            Name = "ai freeze predicate",
+            Fn = function()
+                local Ok = AI.NeedsFreeze(nil, "pd3lib") == true and AI.NeedsFreeze("pd3lib", "pd3lib") == false
+                return Ok, "dedupe predicate"
+            end,
+        },
+        {
+            Name = "weapons live breakpoints (info)",
+            Fn = function()
+                local Meters = Weapons.BreakpointsMeters()
+                return true, string.format("equipped breakpoints=%d %s", #Meters,
+                    #Meters > 0 and ("first=" .. tostring(Meters[1]) .. "m") or "(none equipped)")
+            end,
+        },
+        {
+            Name = "mission difficulty names",
+            Fn = function()
+                return Mission.DifficultyName(0) == "Normal" and Mission.DifficultyName(3) == "Overkill",
+                    "Normal..Overkill"
             end,
         },
     }

@@ -18,6 +18,7 @@
 ---@field lifecycle pd3.Lifecycle
 ---@field maps pd3.Maps
 ---@field reflect pd3.Reflect
+---@field classes pd3.Classes
 ---@field entities pd3.Entities
 ---@field attributes pd3.Attributes
 ---@field interact pd3.Interact
@@ -27,6 +28,8 @@
 ---@field heist pd3.Heist
 ---@field weapons pd3.Weapons
 ---@field loadout pd3.Loadout
+---@field spawn pd3.Spawn
+---@field ai pd3.AI
 local pd3 = { Version = 2 }
 
 --- Options for pd3.Init.
@@ -47,6 +50,7 @@ local pd3 = { Version = 2 }
 ---@field lifecycle pd3.Lifecycle
 ---@field maps pd3.Maps
 ---@field reflect pd3.Reflect
+---@field classes pd3.Classes
 pd3.core = {
     log = require("pd3lib.core.log"),
     safe = require("pd3lib.core.safe"),
@@ -57,6 +61,7 @@ pd3.core = {
     lifecycle = require("pd3lib.core.lifecycle"),
     maps = require("pd3lib.core.maps"),
     reflect = require("pd3lib.core.reflect"),
+    classes = require("pd3lib.core.classes"),
 }
 
 --- Payday 3 specific modules.
@@ -70,6 +75,8 @@ pd3.core = {
 ---@field heist pd3.Heist
 ---@field weapons pd3.Weapons
 ---@field loadout pd3.Loadout
+---@field spawn pd3.Spawn
+---@field ai pd3.AI
 pd3.game = {
     entities = require("pd3lib.game.entities"),
     attributes = require("pd3lib.game.attributes"),
@@ -80,6 +87,8 @@ pd3.game = {
     heist = require("pd3lib.game.heist"),
     weapons = require("pd3lib.game.weapons"),
     loadout = require("pd3lib.game.loadout"),
+    spawn = require("pd3lib.game.spawn"),
+    ai = require("pd3lib.game.ai"),
 }
 
 pd3.selftest = require("pd3lib.selftest")
@@ -93,6 +102,7 @@ pd3.keys = pd3.core.keys
 pd3.lifecycle = pd3.core.lifecycle
 pd3.maps = pd3.core.maps
 pd3.reflect = pd3.core.reflect
+pd3.classes = pd3.core.classes
 pd3.entities = pd3.game.entities
 pd3.attributes = pd3.game.attributes
 pd3.interact = pd3.game.interact
@@ -102,6 +112,8 @@ pd3.mission = pd3.game.mission
 pd3.heist = pd3.game.heist
 pd3.weapons = pd3.game.weapons
 pd3.loadout = pd3.game.loadout
+pd3.spawn = pd3.game.spawn
+pd3.ai = pd3.game.ai
 
 --- Applies options (prefix, debug, selftest key) and logs the load line.
 ---@param Options? pd3lib.InitOptions

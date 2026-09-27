@@ -92,6 +92,10 @@ surrendered civilian), then completion leads to `Multicast_HumanShieldInstigator
 ## Mission, difficulty, escape
 
 - `SBZMissionState.Difficulty` — `0 Normal`, `1 Hard`, `2 VeryHard`, `3 Overkill`.
+- Runtime difficulty change: `SBZGameInstance:SetDifficulty(idx)`; verified in the Shooting Range
+  (`SetDifficulty(1)` -> `GetDifficultyIdx()` reads back `1`). Applies to newly spawned pawns
+  only — existing AI keeps its difficulty. `pd3.mission.SetDifficultyIdx` wraps it and is marked
+  UNSAFE/cheats (may desync the matchmaking/backend difficulty; testing only, game thread only).
 - `CurrentHeistData:GetHeistReferenceText()` -> heist token (`penthouse`); the *level* name
   (`Sky` for Touch The Sky) is different — gate on the heist ref, not the level.
 - `EscapeTimeLeft`, `PlayersInEscapeVolume`, `PlayersRequiredInEscapeVolume`;
@@ -117,6 +121,47 @@ surrendered civilian), then completion leads to `Multicast_HumanShieldInstigator
 - Forced achievement unlocks do not flip local `ChallengeMap` status mid-session: a postcheck
   reading `unlocked=false` right after a successful unlock is expected. The platform UI
   (Steam/console) is authoritative; map status refreshes after re-login/backend resync.
+
+## Direct-spawned pawns and kill-hook mods
+
+Verified in the Shooting Range (TrainingGrounds rounds 7-11, 2026-09-27):
+
+- A pawn spawned directly with `BeginDeferredActorSpawnFromClass`/`FinishSpawningActor`
+  (`pd3.spawn`) is **not registered by the game's spawn pipeline**. Spawn, freeze and cleanup are
+  stable, but its damage/death path is not: when a mod with native damage/kill hooks is loaded
+  (proved with KillStatsMod; WeaponStatsViewer cleared), killing the pawn crashes with a native
+  access violation inside UE4SS member/struct lookups
+  (`handle_unreal_property_value` -> `GetFunctionByNameInChain`;
+  `UScriptStruct::handle_unreal_property_value` -> `auto_construct_object` -> `IsA(0xffff...)`).
+- Mechanism (from `KillStatsMod/scripts/detect.lua`): `Multicast_OnKill` schedules `ProcessKill`
+  120 ms later, reading `KillInstigatorController`, `KillContextData` (struct), `DefeatState` off
+  the victim. For a directly-spawned pawn those reads land on freed/partially-initialized memory.
+  **Lua `pcall` cannot catch native access violations.**
+- Isolation matrix: TrainingSpawner only -> stable; +KillStatsMod -> crash; +WeaponStatsViewer
+  only -> stable. The crash is an interaction with hook callbacks, not the spawn itself.
+- Guidance:
+  - never touch a property of a stale/unvalidated object in a tick loop — check
+    `pd3.safe.IsValid` first, prune with `pd3.world.PruneValid`, re-resolve before re-use;
+  - do not combine direct-spawned pawns that can die with kill/damage-hook mods;
+  - when death must be tested, prefer pawns spawned through the game's own pipeline (or accept
+    the incompatibility and disable the hook mod for the session).
+
+## Dead ends (do not retry)
+
+- **Cheat-manager NPC spawn**: inert in the shipping build. Even with `SBZCheatManager`
+  constructed, `NPCDebugPanel` assigned and a valid `pc.CheatManager`, `SpawnAllAITypes(...)`
+  returns ok and spawns nothing (confirmed twice).
+- **Assault director in the Shooting Range**: `SetAssaultActive` / `StartEndlessAssault` /
+  `SetLevelProgression` stick (`IsAssaultActive=true`) but no pawns ever spawn — the map has
+  `bEnableNavigationSystem=false` and no assault spawn points. Pak spawn-data overrides are
+  equally a dead end for the range (still valid for real heists).
+- **No Lua globals for script classes**: `UKismetMathLibrary`, `UGameplayStatics` etc. are not
+  Lua globals; calling them raises "attempt to call a nil value". Resolve via
+  `StaticFindObject("/Script/Engine.<Class>")` (see `pd3.spawn.Statics`).
+- **`LoadAsset` is not a force-loader for every blueprint**: some BP classes
+  (`CH_SecurityGuard_C` in the Shooting Range) never become valid through any of the four
+  `pd3.classes.Variants` across 8 attempts; `StaticFindObject` only ever sees classes that are
+  already loaded (or loads the package side effect of `LoadAsset`, when it applies).
 
 ## Other hazards
 

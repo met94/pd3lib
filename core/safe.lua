@@ -14,10 +14,25 @@ local TextLibrary = nil
 Safe.Verbose = false
 
 --- Returns true only when Value is a valid UObject (nil-safe).
+---
+--- Prefers the UE4SS global `IsValid` when the build exposes it (checked at
+--- call time; it exists in the tested PD3 UE4SS build); the method
+--- `Value:IsValid()` is only a fallback. Claiming an object is valid from a
+--- stale handle is what turns a later property read into a native crash
+--- (`GetFunctionByNameInChain` / `auto_construct_object` in the dump stacks),
+--- which Lua `pcall` cannot catch — so validate before every member read in
+--- tick loops instead of only where it looks necessary.
 ---@param Value any
 ---@return boolean
 local function SafeIsValid(Value)
     if Value == nil then return false end
+
+    local Global = IsValid
+    if type(Global) == "function" then
+        local Ok, Result = pcall(Global, Value)
+        return Ok and Result == true
+    end
+
     local Ok, Result = pcall(function() return Value:IsValid() end)
     return Ok and Result == true
 end

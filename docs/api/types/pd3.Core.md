@@ -86,11 +86,11 @@ Core.world : pd3.World {
     FindAll: function,
     FindLive: function,
     LoadClass: function,
+    PruneValid: function,
     Distance: function,
     ActorsInPath: function,
     HasAuthority: function,
-    Owner: function,
-    ...(+0)
+    ...(+1)
 }
 ```
 
@@ -223,6 +223,26 @@ Core.reflect : pd3.Reflect {
     DumpEnum: function,
     AddressOf: function,
     ...(+0)
+}
+```
+
+
+
+
+
+
+
+
+
+
+### Core.classes
+---
+```lua
+Core.classes : pd3.Classes {
+    Variants: function,
+    ClassFromObject: function,
+    Ensure: function,
+    NewLoader: function,
 }
 ```
 

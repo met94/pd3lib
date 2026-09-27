@@ -203,6 +203,127 @@ full gun-kick numbers from the recoil asset.
 
 
 
+### Weapons.EquippedFireDataLive
+---
+```lua
+function Weapons.EquippedFireDataLive()
+ -> fireData UObject?
+ -> err string?
+
+```
+
+
+
+
+
+FireData of the currently equipped weapon, read from the live pawn chain
+(in-heist path, unlike `Loadout.EquippedWeaponData` which goes through the
+menu widgets):
+  PlayerController.Pawn.CurrentEquippableConfig.EquippableData.FireData
+  (fallback: .CurrentEquippable.EquippableConfig.EquippableData.FireData)
+Nil (with a reason) when nothing suitable is equipped — melee/throwable
+have no FireData at all. Game-thread safe (property reads only).
+
+
+
+
+
+
+
+
+### Weapons.DistanceFieldCm
+---
+```lua
+function Weapons.DistanceFieldCm(
+  Obj: any,
+  FieldName: string
+) -> distancesCm number[]?
+```
+
+
+
+
+
+`Distance` values (cm) of an array-of-structs property. `#` is tried
+first, then `GetArrayNum` (they disagree in this build); elements are
+read 1-based via `el.Distance`. Nil when the array is missing/empty.
+
+
+
+
+
+
+
+
+### Weapons.BreakpointsCm
+---
+```lua
+function Weapons.BreakpointsCm(Fire: any)
+ -> damageCm number[]?
+ -> critCm number[]?
+
+```
+
+
+
+
+
+Raw damage and critical-multiplier breakpoints (cm) of a FireData object.
+
+
+
+
+
+
+
+
+### Weapons.DistancesFromCm
+---
+```lua
+function Weapons.DistancesFromCm(
+  RawDamages: number[]?,
+  RawCrits: number[]?
+) -> meters number[]
+```
+
+
+
+
+
+Union of damage and crit breakpoints (cm) as a sorted, deduped list of
+meters rounded to 2 decimals. Pure; nil-safe.
+
+
+
+
+
+
+
+
+### Weapons.BreakpointsMeters
+---
+```lua
+function Weapons.BreakpointsMeters(Fire: any) -> meters number[]
+```
+@param `Fire` - defaults to the equipped weapon's live FireData
+
+
+
+
+
+
+Falloff breakpoints (meters) of a FireData object; with no argument it
+reads the live equipped weapon (`EquippedFireDataLive`). Empty table when
+unreadable, so callers can fall back to configured distances.
+Caveat: AI weapon FireData often lacks the distance arrays entirely.
+
+
+
+
+
+
+
+
 ### Weapons.DamageAtDistance
 ---
 ```lua

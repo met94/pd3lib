@@ -39,6 +39,7 @@ function pd3lib.Init(Options: pd3lib.InitOptions?) -> pd3 pd3lib {
     lifecycle = pd3.Lifecycle,
     maps = pd3.Maps,
     reflect = pd3.Reflect,
+    classes = pd3.Classes,
     entities = pd3.Entities,
     attributes = pd3.Attributes,
     interact = pd3.Interact,
@@ -48,6 +49,8 @@ function pd3lib.Init(Options: pd3lib.InitOptions?) -> pd3 pd3lib {
     heist = pd3.Heist,
     weapons = pd3.Weapons,
     loadout = pd3.Loadout,
+    spawn = pd3.Spawn,
+    ai = pd3.AI,
     Init = function,
     Unload = function,
 }
@@ -124,6 +127,7 @@ pd3lib.core : pd3.Core {
     lifecycle: pd3.Lifecycle,
     maps: pd3.Maps,
     reflect: pd3.Reflect,
+    classes: pd3.Classes,
 }
 ```
 
@@ -151,6 +155,8 @@ pd3lib.game : pd3.Game {
     heist: pd3.Heist,
     weapons: pd3.Weapons,
     loadout: pd3.Loadout,
+    spawn: pd3.Spawn,
+    ai: pd3.AI,
 }
 ```
 
@@ -248,11 +254,11 @@ pd3lib.world : pd3.World {
     FindAll: function,
     FindLive: function,
     LoadClass: function,
+    PruneValid: function,
     Distance: function,
     ActorsInPath: function,
     HasAuthority: function,
-    Owner: function,
-    ...(+0)
+    ...(+1)
 }
 ```
 
@@ -385,6 +391,26 @@ pd3lib.reflect : pd3.Reflect {
     DumpEnum: function,
     AddressOf: function,
     ...(+0)
+}
+```
+
+
+
+
+
+
+
+
+
+
+### pd3lib.classes
+---
+```lua
+pd3lib.classes : pd3.Classes {
+    Variants: function,
+    ClassFromObject: function,
+    Ensure: function,
+    NewLoader: function,
 }
 ```
 
@@ -537,14 +563,14 @@ pd3lib.mission : pd3.Mission {
     HeistStateNames: table<integer,string>,
     Get: function,
     Difficulty: function,
+    DifficultyName: function,
+    DifficultyIdx: function,
+    SetDifficultyIdx: function,
     HeistData: function,
     HeistRef: function,
     Escape: function,
     Criterion: function,
-    DumpCriterion: function,
-    DumpHeistData: function,
-    DumpMissionResult: function,
-    ...(+0)
+    ...(+3)
 }
 ```
 
@@ -595,7 +621,7 @@ pd3lib.weapons : pd3.Weapons {
     _UiAsset: any,
     BarReducers: table<string,string>,
     AttributeName: function,
-    ...(+29)
+    ...(+34)
 }
 ```
 
@@ -625,6 +651,54 @@ pd3lib.loadout : pd3.Loadout {
     ActiveConfigIndex: function,
     ScratchWidget: function,
     ...(+9)
+}
+```
+
+
+
+
+
+
+
+
+
+
+### pd3lib.spawn
+---
+```lua
+pd3lib.spawn : pd3.Spawn {
+    AlwaysSpawn: integer,
+    TransformScale: integer,
+    KismetPath: string,
+    GameplayStaticsPath: string,
+    YawRadians: function,
+    FacingYaw: function,
+    OffsetLocation: function,
+    Statics: function,
+    ActorFromClass: function,
+    Destroy: function,
+}
+```
+
+
+
+
+
+
+
+
+
+
+### pd3lib.ai
+---
+```lua
+pd3lib.ai : pd3.AI {
+    NeedsFreeze: function,
+    ControllerOf: function,
+    FreezePawn: function,
+    IsFreezeUnsupported: function,
+    FrozenCount: function,
+    Reset: function,
 }
 ```
 

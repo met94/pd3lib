@@ -88,7 +88,10 @@ Error-tolerant accessors; every helper swallows errors via `pcall` and never rai
 
 - `Call(fn, ...)` -> `ok, ...`
 - `Get(obj, prop)` / `Set(obj, prop, value)` / `CallFn(obj, name, ...)`
-- `IsValid(obj)`, `Describe(value)` (object full name + class; unwraps hook `:get()` wrappers)
+- `IsValid(obj)` — prefers the UE4SS global `IsValid` when the build has it, method `obj:IsValid()`
+  as fallback. Validate every object before reading its members in tick loops: stale handles fault
+  natively (`GetFunctionByNameInChain` / `auto_construct_object`) beyond `pcall`'s reach
+- `Describe(value)` (object full name + class; unwraps hook `:get()` wrappers)
 - `Text(ftext)` (FText -> string, `KismetTextLibrary` fallback)
 - `TextOrNil(ftext)` — `Text` trimmed; nil for nil, empty, whitespace-only or `"nil"` results
   (menu FTexts can stringify to a single space in this build)
@@ -114,6 +117,18 @@ Error-tolerant accessors; every helper swallows errors via `pcall` and never rai
 iteration. Early-stop is therefore unavailable; count/skip inside the closure. `pairs()` never
 works on TMaps.
 
+### core.classes
+Class resolution with ordered fallbacks and an incremental, non-fatal load queue.
+
+- `Variants(path)` — ordered resolver attempts: `LoadAsset(object)`, `StaticFindObject(object)`,
+  `LoadAsset(package)`, `StaticFindObject(package)`
+- `ClassFromObject(obj)` — class objects pass through; Blueprint assets unwrap to `GeneratedClass`
+- `Ensure(path)` -> `class, variant` — one-shot resolve through all variants (game thread)
+- `NewLoader({ BudgetPerTick = 2, MaxAttempts = 8, Resolve, Log })` -> loader with
+  `Enqueue(paths)`, `Step()`, `Get(path)` (`class` / `false` gave up / `nil` pending),
+  `RetryFailed()`, `Pending()`; budgeted by design so a bad class never aborts a roster.
+  `Resolve` can be injected for unit tests
+
 ### core.reflect
 Introspection-driven dumpers that keep working across game updates (no hardcoded offsets).
 
@@ -137,6 +152,8 @@ Introspection-driven dumpers that keep working across game updates (no hardcoded
 - `Distance(a, b)` (actors or vectors)
 - `ActorsInPath(pathSubstring, aroundActor, maxDistance)` — iterates all actors, filters by class
   path substring, sorts by distance
+- `PruneValid(list, onLost)` -> `survivors, lostCount` — drops invalid UObjects, calls
+  `onLost(entry, index)` for each (returns the original list when nothing was lost)
 - `HasAuthority(actor)`, `Owner(actor)`
 
 ### core.hooks
@@ -196,7 +213,11 @@ Registration is lazy: hooks are installed on first callback.
 
 ### game.mission
 - `Get()` — live `SBZMissionState`
-- `Difficulty(state)` -> `value, name`; `DifficultyNames`
+- `Difficulty(state)` -> `value, name`; `DifficultyNames`; `DifficultyName(index)` -> string
+- `DifficultyIdx(state?)` — live `GetDifficultyIdx()` read (nil outside a mission)
+- `SetDifficultyIdx(index)` -> `ok, err` — **UNSAFE/cheats**: `SBZGameInstance:SetDifficulty`,
+  testing only; affects newly spawned pawns only, game thread only, may desync
+  matchmaking/backend difficulty
 - `HeistData(state)`, `HeistRef(state)` — heist token such as `penthouse`
 - `Escape(state)` -> `{ TimeLeft, PlayersIn, PlayersRequired }`
 - `Criterion(name)` — e.g. `Criterion("InsurancePolicy")`; nil outside a mission
@@ -222,6 +243,15 @@ Registration is lazy: hooks are installed on first callback.
   band semantics: damage uses the first `DamageDistanceArray` entry whose distance is >= the
   shot (else the last), the critical multiplier the first entry strictly beyond it (else the
   last); both take the `Raw` table and meters
+- `EquippedFireDataLive()` — in-heist FireData of the currently equipped weapon via
+  `PlayerController.Pawn.CurrentEquippableConfig.EquippableData.FireData` (fallback
+  `.CurrentEquippable.EquippableConfig...`); nil with a reason for melee/throwable
+- `DistanceFieldCm(obj, field)`, `BreakpointsCm(fire)`, `BreakpointsMeters(fire?)` — falloff
+  breakpoints in cm/m; the meters list is the sorted, deduped union of
+  `DamageDistanceArray` + `CriticalDamageMultiplierDistanceArray` (`DistancesFromCm` is the
+  pure converter). With no argument it reads the live equipped weapon; empty table when
+  unreadable, so callers can fall back to configured distances. AI weapon FireData often
+  lacks the distance arrays
 - `Parts(weapon)`, `PartInfo(part)` — modular slots, part `AttributeModifierMap`, part stats asset path
 - `AttributeCurves(refresh?)`, `CurveValue(row, x)`, `AttributeValue(attribute, modifier)` —
   live `CT_ModData_Default` TMap read with generated `game.weapons_curves` fallback
@@ -285,6 +315,32 @@ Registration is lazy: hooks are installed on first callback.
 - Detection runs once per level init (deferred out of hook context); no polling. A level
   restart fires `Exit`, the following level init re-arms. Mission end does not fire `Exit` —
   the mission state stays alive until the level changes
+
+### game.spawn
+Direct actor spawning for test rigs and training areas (game thread only).
+
+- `Statics()` — cached `KismetMathLibrary` + `GameplayStatics` CDOs resolved with
+  `StaticFindObject` (this UE4SS build has no Lua globals for script classes)
+- `ActorFromClass(class, { X, Y, Z }, yawDeg, world?)` -> `actor, err` — `MakeVector` ->
+  `MakeRotator(0, 0, yaw)` -> `MakeTransform` -> `BeginDeferredActorSpawnFromClass(world, class,
+  transform, AlwaysSpawn, nil, TransformScale)` -> `FinishSpawningActor`; every step pcall'd
+- `OffsetLocation(x, y, yawDeg, distanceCm)` -> `offsetX, offsetY`, `FacingYaw(playerYaw)`,
+  `YawRadians(deg)` — pure placement math
+- `Destroy(actor)` — `K2_DestroyActor` in protected mode
+- Caveat: pawns spawned this way are not registered by the game's spawn pipeline; see the
+  kill-hook hazard in `docs/knowledge-base.md` before letting them die next to
+  damage/kill-hook mods
+
+### game.ai
+- `NeedsFreeze(lastReason, reason)` — dedupe predicate (true when the controller's last
+  disabled reason differs)
+- `FreezePawn(pawn, reason?)` -> `ok, detail` — `SBZAIController:SetAIEnabled(false, FName)`;
+  deduped against `LastDisabledReason` and an in-memory cache, unsupported controllers (no
+  `SetAIEnabled`, e.g. the Moon drone) are cached and logged once
+- `ControllerOf(pawn)`, `IsFreezeUnsupported(pawn)`, `FrozenCount()`, `Reset()` (clear caches on
+  level change)
+- **Hard rule**: never register a UE4SS hook on `SetAIEnabled` in a mod that calls it — calling a
+  hooked UFunction re-enters the hook and crashes
 
 ## Multi-mod use
 

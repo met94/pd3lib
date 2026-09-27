@@ -3,10 +3,12 @@
 
 ## Types
 
+- [class AI](types/pd3.AI.md)
 - [class Attributes](types/pd3.Attributes.md)
 - [class Callbacks](types/pd3.Heist.Callbacks.md)
 - [class Challenge](types/pd3.Challenge.md)
 - [class Check](types/pd3.SelfTest.Check.md)
+- [class Classes](types/pd3.Classes.md)
 - [class Core](types/pd3.Core.md)
 - [class CurvesData](types/pd3.Weapons.CurvesData.md)
 - [class Entities](types/pd3.Entities.md)
@@ -18,6 +20,7 @@
 - [class Interact](types/pd3.Interact.md)
 - [class Keys](types/pd3.Keys.md)
 - [class Lifecycle](types/pd3.Lifecycle.md)
+- [class Loader](types/pd3.Classes.Loader.md)
 - [class Loadout](types/pd3.Loadout.md)
 - [class Log](types/pd3.Log.md)
 - [class Maps](types/pd3.Maps.md)
@@ -28,6 +31,7 @@
 - [class Safe](types/pd3.Safe.md)
 - [class SelfTest](types/pd3.SelfTest.md)
 - [class Shield](types/pd3.Shield.md)
+- [class Spawn](types/pd3.Spawn.md)
 - [class State](types/pd3.Interact.State.md)
 - [class Timers](types/pd3.Timers.md)
 - [class Weapons](types/pd3.Weapons.md)
@@ -37,6 +41,7 @@
 
 
 ## Modules
+- [core.classes](modules/core.classes.md)
 - [core.hooks](modules/core.hooks.md)
 - [core.keys](modules/core.keys.md)
 - [core.lifecycle](modules/core.lifecycle.md)
@@ -46,6 +51,7 @@
 - [core.safe](modules/core.safe.md)
 - [core.timers](modules/core.timers.md)
 - [core.world](modules/core.world.md)
+- [game.ai](modules/game.ai.md)
 - [game.attributes](modules/game.attributes.md)
 - [game.challenge](modules/game.challenge.md)
 - [game.entities](modules/game.entities.md)
@@ -54,12 +60,10 @@
 - [game.loadout](modules/game.loadout.md)
 - [game.mission](modules/game.mission.md)
 - [game.shield](modules/game.shield.md)
+- [game.spawn](modules/game.spawn.md)
 - [game.weapons](modules/game.weapons.md)
 - [game.weapons_curves](modules/game.weapons_curves.md)
 - [init](modules/init.md)
 - [pd3lib](modules/pd3lib.md)
 - [selftest](modules/selftest.md)
-
-
-
 

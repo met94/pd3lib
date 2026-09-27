@@ -515,6 +515,115 @@ function Weapons.Raw(Weapon)
     return Stats
 end
 
+--- FireData of the currently equipped weapon, read from the live pawn chain
+--- (in-heist path, unlike `Loadout.EquippedWeaponData` which goes through the
+--- menu widgets):
+---   PlayerController.Pawn.CurrentEquippableConfig.EquippableData.FireData
+---   (fallback: .CurrentEquippable.EquippableConfig.EquippableData.FireData)
+--- Nil (with a reason) when nothing suitable is equipped — melee/throwable
+--- have no FireData at all. Game-thread safe (property reads only).
+---@return UObject? fireData
+---@return string? err
+function Weapons.EquippedFireDataLive()
+    local Controller = World.GetPlayerController()
+    if Controller == nil then return nil, "no player controller" end
+
+    local Pawn = Safe.Get(Controller, "Pawn")
+    if not Safe.IsValid(Pawn) then return nil, "no pawn" end
+
+    local Data = nil
+    local Config = Safe.Resolve(Safe.Get(Pawn, "CurrentEquippableConfig"))
+    if Config ~= nil then Data = Safe.Resolve(Safe.Get(Config, "EquippableData")) end
+    if not Safe.IsValid(Data) then
+        local Equippable = Safe.Resolve(Safe.Get(Pawn, "CurrentEquippable"))
+        if Equippable ~= nil then
+            local Config2 = Safe.Resolve(Safe.Get(Equippable, "EquippableConfig"))
+            if Config2 ~= nil then Data = Safe.Resolve(Safe.Get(Config2, "EquippableData")) end
+        end
+    end
+    if not Safe.IsValid(Data) then return nil, "no equippable data (melee/throwable?)" end
+
+    local Fire = Safe.Resolve(Safe.Get(Data, "FireData"))
+    if not Safe.IsValid(Fire) then return nil, "no FireData (melee/throwable or AI weapon?)" end
+    return Fire
+end
+
+--- `Distance` values (cm) of an array-of-structs property. `#` is tried
+--- first, then `GetArrayNum` (they disagree in this build); elements are
+--- read 1-based via `el.Distance`. Nil when the array is missing/empty.
+---@param Obj any
+---@param FieldName string
+---@return number[]? distancesCm
+function Weapons.DistanceFieldCm(Obj, FieldName)
+    local Array = Safe.Get(Obj, FieldName)
+    if Array == nil then return nil end
+
+    local Count = Safe.ArrayCount(Array)
+    if Count == nil or Count <= 0 then
+        local OkNum, Num = Pcall("GetArrayNum " .. FieldName, function() return Array:GetArrayNum() end)
+        if OkNum and type(Num) == "number" and Num > 0 then Count = Num end
+    end
+    if Count == nil or Count <= 0 then return nil end
+
+    local Result = {}
+    for Index = 1, Count do
+        local Ok, Element = Pcall("distance element", function() return Array[Index] end)
+        if Ok and Element ~= nil then
+            local Distance = NumOf(Safe.Get(Element, "Distance"))
+            if Distance ~= nil then Result[#Result + 1] = Distance end
+        end
+    end
+
+    if #Result == 0 then return nil end
+    return Result
+end
+
+--- Raw damage and critical-multiplier breakpoints (cm) of a FireData object.
+---@param Fire any
+---@return number[]? damageCm
+---@return number[]? critCm
+function Weapons.BreakpointsCm(Fire)
+    if Fire == nil then return nil, nil end
+    return Weapons.DistanceFieldCm(Fire, "DamageDistanceArray"),
+        Weapons.DistanceFieldCm(Fire, "CriticalDamageMultiplierDistanceArray")
+end
+
+--- Union of damage and crit breakpoints (cm) as a sorted, deduped list of
+--- meters rounded to 2 decimals. Pure; nil-safe.
+---@param RawDamages number[]?
+---@param RawCrits number[]?
+---@return number[] meters
+function Weapons.DistancesFromCm(RawDamages, RawCrits)
+    local Seen, List = {}, {}
+    local function Add(Cm)
+        if type(Cm) ~= "number" or Cm <= 0 then return end
+        local Meters = math.floor(Cm / 100 * 100 + 0.5) / 100
+        if Meters > 0 and not Seen[Meters] then
+            Seen[Meters] = true
+            List[#List + 1] = Meters
+        end
+    end
+
+    for _, Value in ipairs(type(RawDamages) == "table" and RawDamages or {}) do Add(Value) end
+    for _, Value in ipairs(type(RawCrits) == "table" and RawCrits or {}) do Add(Value) end
+    table.sort(List)
+    return List
+end
+
+--- Falloff breakpoints (meters) of a FireData object; with no argument it
+--- reads the live equipped weapon (`EquippedFireDataLive`). Empty table when
+--- unreadable, so callers can fall back to configured distances.
+--- Caveat: AI weapon FireData often lacks the distance arrays entirely.
+---@param Fire any? # defaults to the equipped weapon's live FireData
+---@return number[] meters
+function Weapons.BreakpointsMeters(Fire)
+    if Fire == nil then
+        Fire = Weapons.EquippedFireDataLive()
+    end
+    local DamageCm, CritCm = Weapons.BreakpointsCm(Fire)
+    return Weapons.DistancesFromCm(DamageCm, CritCm)
+end
+
 --- Distance-band lookup over the raw FireData arrays (entries sorted ascending
 --- by Distance in cm, fields as produced by Weapons.Raw).
 --- Damage uses the native inclusive band (first entry with Distance >= query,
