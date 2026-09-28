@@ -115,6 +115,7 @@ pd3.weapons = pd3.game.weapons
 pd3.loadout = pd3.game.loadout
 pd3.spawn = pd3.game.spawn
 pd3.ai = pd3.game.ai
+pd3.chat = pd3.game.chat
 
 --- Applies options (prefix, debug, selftest key) and logs the load line.
 ---@param Options? pd3lib.InitOptions
