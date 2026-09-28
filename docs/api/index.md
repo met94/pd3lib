@@ -69,6 +69,7 @@
 - [pd3lib](modules/pd3lib.md)
 - [selftest](modules/selftest.md)
 - [tests.ai_test](modules/tests.ai_test.md)
+- [tests.chat_test](modules/tests.chat_test.md)
 - [tests.classes_test](modules/tests.classes_test.md)
 - [tests.mission_test](modules/tests.mission_test.md)
 - [tests.safe_test](modules/tests.safe_test.md)
@@ -81,6 +82,8 @@
 
 ## Globals
 - [FName](globals/FName.md)
+- [FindAllOf](globals/FindAllOf.md)
+- [IsValid](globals/IsValid.md)
 - [IsValid](globals/IsValid.md)
 - [IsValid](globals/IsValid.md)
 - [IsValid](globals/IsValid.md)

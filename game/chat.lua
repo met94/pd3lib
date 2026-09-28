@@ -21,6 +21,12 @@ local Log = require("pd3lib.core.log")
 --- "SBZChatInGame" instance resolution is cached per call site only; FindLive is cheap.
 local WarnedUnavailable = false
 
+--- Clears the one-shot "unavailable" warning (call on level change / restart
+--- so a failure in the new level is reported again instead of staying silent).
+function Chat.Reset()
+    WarnedUnavailable = false
+end
+
 --- The live SBZChatInGame instance, or nil outside a running level.
 ---@return UObject? chat
 function Chat.Get()

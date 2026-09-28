@@ -41,6 +41,7 @@ function pd3lib.Init(Options: pd3lib.InitOptions?) -> pd3 pd3lib {
     loadout = pd3.Loadout,
     spawn = pd3.Spawn,
     ai = pd3.AI,
+    chat = unknown,
     Init = function,
     Unload = function,
 }
@@ -239,6 +240,7 @@ pd3lib.safe : pd3.Safe {
 ```lua
 pd3lib.world : pd3.World {
     GetPlayerController: function,
+    Reset: function,
     GetPawn: function,
     GetPlayerState: function,
     GetWorld: function,
@@ -249,8 +251,7 @@ pd3lib.world : pd3.World {
     PruneValid: function,
     Distance: function,
     ActorsInPath: function,
-    HasAuthority: function,
-    ...(+1)
+    ...(+2)
 }
 ```
 
@@ -692,6 +693,21 @@ pd3lib.ai : pd3.AI {
     FrozenCount: function,
     Reset: function,
 }
+```
+
+
+
+
+
+
+
+
+
+
+### pd3lib.chat
+---
+```lua
+pd3lib.chat : unknown
 ```
 
 

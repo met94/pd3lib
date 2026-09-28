@@ -6,6 +6,38 @@ compatibility line.
 
 ## [Unreleased]
 
+## [2.2.2] - 2026-09-28
+
+### Added
+
+- `core.world.Reset()` — clears the cached local PlayerController so the next lookup
+  re-resolves after a level change (a stale menu/previous-level controller previously
+  poisoned `GetPawn`/`GetPlayerState` and chat sends).
+- `core.classes.Loader:Reset()` — clears resolved, queued and gave-up paths for a level
+  transition.
+- `game.chat.Reset()` — clears the one-shot "SBZChatInGame unavailable" warning so a
+  failure in the new level is reported instead of staying silent.
+
+### Fixed
+
+- `core.classes.Loader:Get` now drops a resolved class object that is no longer valid and
+  reports the path as unresolved again, so callers re-enqueue and `Step` re-resolves it
+  against the current level instead of silently swallowing queued work (TrainingSpawner
+  post-transition spawn failure, 2026-09-28).
+- `core.world.GetPlayerController` no longer pins a pawnless transition/menu controller:
+  it prefers a local controller with a live pawn, then any local controller, then a pawned
+  one, and re-resolves a cached pawnless controller as soon as a local candidate exists.
+  A controller cached right after level init previously made spawns log `no player pawn`
+  and weapon reads fall back while the player was already walking around (TrainingSpawner,
+  2026-09-28).
+
+## [2.2.1] - 2026-09-28
+
+### Fixed
+
+- `pd3.chat` top-level alias was missing from the `pd3lib.lua` alias list (`game.chat`
+  existed since 2.2.0 but was only reachable as `pd3.game.chat`).
+
 ## [2.2.0] - 2026-09-28
 
 ### Added

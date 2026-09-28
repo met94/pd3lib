@@ -4,6 +4,11 @@
 --- paths, call `loader:Step()` once per tick (budget 1-2), retry on later
 --- ticks and treat `false` as permanently gave up.
 ---
+--- A resolved class that died with a previous level is reported as unresolved
+--- again by `Get` (and dropped from the cache), so callers re-enqueue and
+--- `Step` re-resolves it against the new level. `Reset` clears everything at
+--- once for level transitions.
+---
 --- Resolution variants, in order:
 ---   1. `LoadAsset(object path)`  2. `StaticFindObject(object path)`
 ---   3. `LoadAsset(package path)` 4. `StaticFindObject(package path)`
@@ -181,11 +186,28 @@ function Classes.NewLoader(Opts)
         return Retried
     end
 
-    --- Resolved class, `false` when gave up, nil when still pending.
+    --- Clears every resolved, queued and gave-up path (call on level change /
+    --- restart so paths are resolved against the new level's packages).
+    function Loader:Reset()
+        self.Queue = {}
+        self.InQueue = {}
+        self.States = {}
+        self.Attempts = {}
+    end
+
+    --- Resolved class, `false` when gave up, nil when still pending or when
+    --- the resolved object is no longer valid (e.g. unloaded with a level;
+    --- the stale state is dropped so a later Enqueue can re-resolve it).
     ---@param Path string
     ---@return any state
     function Loader:Get(Path)
-        return self.States[Path]
+        local State = self.States[Path]
+        if State ~= nil and State ~= false and not Safe.IsValid(State) then
+            self.States[Path] = nil
+            self.Attempts[Path] = nil
+            return nil
+        end
+        return State
     end
 
     --- Number of paths still queued.

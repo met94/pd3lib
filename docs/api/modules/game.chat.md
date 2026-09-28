@@ -12,6 +12,26 @@
 ## methods
 ---
 
+### Chat.Reset
+---
+```lua
+function Chat.Reset() ->  nil
+```
+
+
+
+
+
+Clears the one-shot "unavailable" warning (call on level change / restart
+so a failure in the new level is reported again instead of staying silent).
+
+
+
+
+
+
+
+
 ### Chat.Get
 ---
 ```lua

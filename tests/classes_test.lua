@@ -1,6 +1,10 @@
 -- Pure tests for core.classes variant order and the incremental loader.
 local Classes = require("pd3lib.core.classes")
 
+-- Object validity stub: real UObjects resolve through IsValid; test states are
+-- tables, so they opt out with valid = false when simulating a dead object.
+IsValid = function(Value) return Value ~= nil and Value.valid ~= false end
+
 local failures = 0
 local function check(name, cond)
     if cond then
@@ -61,5 +65,33 @@ local Solver = Classes.NewLoader({ Resolve = function(Path) return Path == "x" a
 Solver:Enqueue({ "x" })
 Solver:Step()
 check("custom resolver used", Solver:Get("x") == "class-x")
+
+-- A resolved class that died with the previous level must not be handed out.
+local StaleClass = { valid = true, name = "stale" }
+local StaleLoader = Classes.NewLoader({ Resolve = function() return StaleClass end })
+StaleLoader:Enqueue({ "s1" })
+StaleLoader:Step()
+check("stale precondition resolved", StaleLoader:Get("s1") == StaleClass)
+StaleClass.valid = false
+check("stale state invalidated", StaleLoader:Get("s1") == nil)
+StaleClass.valid = true
+check("invalidated state re-enqueued", StaleLoader:Enqueue({ "s1" }) == 1)
+StaleLoader:Step()
+check("stale state re-resolved", StaleLoader:Get("s1") == StaleClass)
+
+-- Reset clears resolved, queued and gave-up state for a new level.
+local ResetLoader = Classes.NewLoader({
+    BudgetPerTick = 2,
+    Resolve = function(Path) return { name = Path, valid = true } end,
+})
+ResetLoader:Enqueue({ "r1", "r2" })
+ResetLoader:Step()
+check("reset precondition resolved", ResetLoader:Get("r1") ~= nil)
+ResetLoader:Reset()
+check("reset clears resolved", ResetLoader:Get("r1") == nil)
+check("reset clears queue", ResetLoader:Pending() == 0)
+check("reset allows re-enqueue", ResetLoader:Enqueue({ "r1" }) == 1)
+ResetLoader:Step()
+check("reset re-resolves", ResetLoader:Get("r1") ~= nil)
 
 return failures

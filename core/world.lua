@@ -8,21 +8,82 @@ local Log = require("pd3lib.core.log")
 
 local PlayerControllerCache = nil
 
---- First valid local PlayerController (falls back to "Controller" find).
----@return APlayerController? controller
-function World.GetPlayerController()
-    if Safe.IsValid(PlayerControllerCache) then return PlayerControllerCache end
+--- True when the controller resolves to a live Pawn.
+---@param Controller any
+---@return boolean
+local function HasPawn(Controller)
+    if not Safe.IsValid(Controller) then return false end
+    return Safe.IsValid(Safe.Get(Controller, "Pawn"))
+end
 
+--- True when the controller says it is the local one; a missing or raising
+--- `IsLocalController` counts as not local.
+---@param Controller any
+---@return boolean
+local function IsLocal(Controller)
+    local Ok, Value = Safe.CallFn(Controller, "IsLocalController")
+    return Ok and Value == true
+end
+
+--- Resolution score: 3 local with a live pawn (the only usable one for spawn
+--- and weapon reads), 2 local without (PlayerState/chat), 1 pawned non-local,
+--- 0 any other valid controller (menu/loading fallback).
+---@param Controller any
+---@return integer
+local function ControllerScore(Controller)
+    local Local = IsLocal(Controller)
+    local Pawned = HasPawn(Controller)
+    if Local then return Pawned and 3 or 2 end
+    if Pawned then return 1 end
+    return 0
+end
+
+--- Best live controller of the current object list; second return is its score
+--- (-1 when the list holds no valid controller).
+---@return UObject? controller
+---@return integer score
+local function FindController()
     local Controllers = World.FindAll("PlayerController")
     if #Controllers == 0 then Controllers = World.FindAll("Controller") end
 
+    local Best, BestScore = nil, -1
     for _, Controller in ipairs(Controllers) do
         if Safe.IsValid(Controller) then
-            PlayerControllerCache = Controller
-            return Controller
+            local Score = ControllerScore(Controller)
+            if Score > BestScore then
+                Best, BestScore = Controller, Score
+            end
         end
     end
-    return nil
+    return Best, BestScore
+end
+
+--- Local PlayerController. Prefers the local controller with a live pawn so
+--- that a transition/menu or remote controller cached around a level change is
+--- not pinned: a pawnless cache is re-resolved as soon as a local candidate
+--- (pawned or not) exists. Falls back to "Controller" finds and the first
+--- valid controller for menu/loading states.
+---@return APlayerController? controller
+function World.GetPlayerController()
+    if Safe.IsValid(PlayerControllerCache) then
+        if not HasPawn(PlayerControllerCache) then
+            local Best, Score = FindController()
+            if Best ~= nil and Score >= 2 and Best ~= PlayerControllerCache then
+                PlayerControllerCache = Best
+            end
+        end
+        return PlayerControllerCache
+    end
+
+    PlayerControllerCache = FindController()
+    return PlayerControllerCache
+end
+
+--- Clears the cached PlayerController (call on level change / restart so the
+--- next lookup re-resolves against the new level instead of a stale menu or
+--- previous-level controller).
+function World.Reset()
+    PlayerControllerCache = nil
 end
 
 --- Pawn of the local PlayerController.

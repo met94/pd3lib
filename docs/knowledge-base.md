@@ -146,6 +146,26 @@ Verified in the Shooting Range (TrainingGrounds rounds 7-11, 2026-09-27):
   - when death must be tested, prefer pawns spawned through the game's own pipeline (or accept
     the incompatibility and disable the hook mod for the session).
 
+## Level transitions and cached state
+
+Verified from a Shooting Range -> menu -> another heist session (TrainingSpawner,
+2026-09-28):
+
+- Class objects resolved in one level can be destroyed when that level's packages unload.
+  A loader that keeps handing out stale class refs makes queued spawns vanish silently:
+  `Get` returned the dead class, the spawn call dropped it without a log, and `pending`
+  went back to 0 (no `spawned`, no `spawn FAIL`). `classes.Loader:Get` now invalidates
+  states that fail `safe.IsValid`, and `Loader:Reset()` clears resolved/queued/gave-up
+  paths for the next level.
+- Cached engine lookups must not survive a level change: `core.world` caches the local
+  PlayerController, so a stale menu/previous-level controller breaks pawn and PlayerState
+  resolution — spawns log `no player pawn`, chat sends fail with `no player state`.
+  Reset from the lifecycle callbacks: `world.Reset()`, `ai.Reset()`, `chat.Reset()`
+  (the chat warning is one-shot per level, otherwise later failures stay silent).
+- Lifecycle callbacks run in engine-hook context: calling UFunctions there is unsafe. The
+  resets above are pure Lua; defer engine reads with `timers.After(0, fn)` (pattern:
+  `game.heist`).
+
 ## Dead ends (do not retry)
 
 - **Cheat-manager NPC spawn**: inert in the shipping build. Even with `SBZCheatManager`

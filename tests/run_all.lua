@@ -16,6 +16,7 @@ local Suites = {
     "safe_test.lua",
     "world_test.lua",
     "classes_test.lua",
+    "chat_test.lua",
     "spawn_test.lua",
     "ai_test.lua",
     "weapons_test.lua",

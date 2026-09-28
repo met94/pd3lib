@@ -79,6 +79,7 @@ Core.safe : pd3.Safe {
 ```lua
 Core.world : pd3.World {
     GetPlayerController: function,
+    Reset: function,
     GetPawn: function,
     GetPlayerState: function,
     GetWorld: function,
@@ -89,8 +90,7 @@ Core.world : pd3.World {
     PruneValid: function,
     Distance: function,
     ActorsInPath: function,
-    HasAuthority: function,
-    ...(+1)
+    ...(+2)
 }
 ```
 

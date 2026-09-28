@@ -126,8 +126,10 @@ Class resolution with ordered fallbacks and an incremental, non-fatal load queue
 - `Ensure(path)` -> `class, variant` — one-shot resolve through all variants (game thread)
 - `NewLoader({ BudgetPerTick = 2, MaxAttempts = 8, Resolve, Log })` -> loader with
   `Enqueue(paths)`, `Step()`, `Get(path)` (`class` / `false` gave up / `nil` pending),
-  `RetryFailed()`, `Pending()`; budgeted by design so a bad class never aborts a roster.
-  `Resolve` can be injected for unit tests
+  `RetryFailed()`, `Pending()`, `Reset()` (clear everything on a level change); budgeted by
+  design so a bad class never aborts a roster. `Get` drops a resolved object that is no
+  longer valid and reports it as unresolved, so callers re-enqueue and re-resolve it
+  against the current level. `Resolve` can be injected for unit tests
 
 ### core.reflect
 Introspection-driven dumpers that keep working across game updates (no hardcoded offsets).
@@ -144,7 +146,9 @@ Introspection-driven dumpers that keep working across game updates (no hardcoded
 - Safe defaults: known-freeze props skipped, arrays capped, output budgeted, everything pcall'd.
 
 ### core.world
-- `GetPlayerController()`, `GetPawn()`, `GetPlayerState()`, `GetWorld()`, `GetLevelName()`
+- `GetPlayerController()` — prefers a local controller with a live pawn, then any local
+  controller, then a pawned one; a cached pawnless controller is re-resolved when a local
+  candidate exists. Then `GetPawn()`, `GetPlayerState()`, `GetWorld()`, `GetLevelName()`
 - `FindAll(className)` (safe `FindAllOf`, always returns a table)
 - `FindLive(className)` — first non-`Default__` valid instance (plus full name)
 - `LoadClass(packagePath, classPath)` — `StaticFindObject`, then `LoadAsset(package)` and retry
@@ -154,6 +158,7 @@ Introspection-driven dumpers that keep working across game updates (no hardcoded
   path substring, sorts by distance
 - `PruneValid(list, onLost)` -> `survivors, lostCount` — drops invalid UObjects, calls
   `onLost(entry, index)` for each (returns the original list when nothing was lost)
+- `Reset()` — clears the cached PlayerController (call on level change / restart)
 - `HasAuthority(actor)`, `Owner(actor)`
 
 ### core.hooks
@@ -174,6 +179,11 @@ Hook callbacks run wrapped in `pcall`; callback errors are logged, not fatal.
 ### core.lifecycle
 `OnLevelInit(fn)`, `OnLevelRestart(fn)`, `OnMissionEnd(fn)`, `OnReturnToMenu(fn)`.
 Registration is lazy: hooks are installed on first callback.
+
+Level changes invalidate cached engine state. Reset it from these callbacks:
+`world.Reset()` (PlayerController cache), `classes.Loader:Reset()`, `ai.Reset()`,
+`chat.Reset()`. Keep callbacks engine-free — defer engine reads with
+`timers.After(0, fn)` (see `game.heist`).
 
 ### game.entities
 - `CivilianClasses`, `CrewClasses` (BP class short names, `_C` suffix required)
@@ -348,6 +358,7 @@ Direct actor spawning for test rigs and training areas (game thread only).
 - `Send(text)` -> `ok, err` — one chat line through
   `SBZChatInGame:SendChatMessageToServer({PlayerState=…, Message=…})`
 - `SendFmt(fmt, …)` — `string.format` wrapper over `Send`
+- `Reset()` — clears the one-shot "SBZChatInGame unavailable" warning (call on level change)
 - Works **solo / as host**: the server path executes locally and the message is multicasted back
   into the local feed (field-proven in solo; client-role multiplayer untested). Messages are not
   truncated — keep lines short.

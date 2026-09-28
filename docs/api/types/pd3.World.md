@@ -30,7 +30,32 @@ function World.GetPlayerController() -> controller APlayerController?
 
 
 
-First valid local PlayerController (falls back to "Controller" find).
+Local PlayerController. Prefers the local controller with a live pawn so
+that a transition/menu or remote controller cached around a level change is
+not pinned: a pawnless cache is re-resolved as soon as a local candidate
+(pawned or not) exists. Falls back to "Controller" finds and the first
+valid controller for menu/loading states.
+
+
+
+
+
+
+
+
+### World.Reset
+---
+```lua
+function World.Reset() ->  nil
+```
+
+
+
+
+
+Clears the cached PlayerController (call on level change / restart so the
+next lookup re-resolves against the new level instead of a stale menu or
+previous-level controller).
 
 
 

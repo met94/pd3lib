@@ -12,6 +12,11 @@ them, and a single bad path must never abort a roster: callers enqueue
 paths, call `loader:Step()` once per tick (budget 1-2), retry on later
 ticks and treat `false` as permanently gave up.
 
+A resolved class that died with a previous level is reported as unresolved
+again by `Get` (and dropped from the cache), so callers re-enqueue and
+`Step` re-resolves it against the new level. `Reset` clears everything at
+once for level transitions.
+
 Resolution variants, in order:
   1. `LoadAsset(object path)`  2. `StaticFindObject(object path)`
   3. `LoadAsset(package path)` 4. `StaticFindObject(package path)`
