@@ -18,6 +18,7 @@ local Shield = require("pd3lib.game.shield")
 local Challenge = require("pd3lib.game.challenge")
 local Mission = require("pd3lib.game.mission")
 local AI = require("pd3lib.game.ai")
+local Chat = require("pd3lib.game.chat")
 
 local ExtraChecks = {}
 
@@ -218,6 +219,12 @@ local function DefaultChecks()
             Fn = function()
                 local Ok = AI.NeedsFreeze(nil, "pd3lib") == true and AI.NeedsFreeze("pd3lib", "pd3lib") == false
                 return Ok, "dedupe predicate"
+            end,
+        },
+        {
+            Name = "chat sink (info)",
+            Fn = function()
+                return true, Chat.Available() and "SBZChatInGame found" or "no SBZChatInGame (menu / loading)"
             end,
         },
         {

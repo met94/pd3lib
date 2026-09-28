@@ -192,6 +192,20 @@ Verified in the Shooting Range (TrainingGrounds rounds 7-11, 2026-09-27):
   (...)` log happen when the hooked function is next invoked. Cleanup log lines therefore
   appear at the next fire, not at unhook time — they do not mean hooks leaked.
 
+## Chat messages
+
+- Sink: `SBZChatInGame` (`World.FindLive`); the send entry point is the **server RPC**
+  `SendChatMessageToServer(FSBZPlayerChatEvent)` with struct fields `PlayerState`
+  (`APlayerState`) and `Message` (`FString`).
+- In solo the local player *is* the server, so the call executes locally and the message is
+  multicast back into the local feed. In a client role the RPC goes to the host; behaviour there
+  is untested (the reference mod that proved this shipped solo-only).
+- Rendering is UMG rich text driven by `Content/UI/Assets/Text/DT_ChatRichTextStyles`; the tag set
+  and colours are listed in the README `game.chat` section. Untagged text renders as `default`.
+- `MaxChatMessageLength` exists on the chat types; do not rely on truncation — keep lines short.
+- Do not send from hook pre-callbacks (UFunction call hazard, see Other hazards); call it from
+  key handlers or `pd3.timers` callbacks.
+
 ## Reference tables
 
 Civilians: `CH_Civilian_01_C`, `CH_Civilian_Female_01_C`, `CH_Civilian_Employee_Male_01_C`,

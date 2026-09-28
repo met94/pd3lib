@@ -6,8 +6,13 @@ compatibility line.
 
 ## [Unreleased]
 
+## [2.2.0] - 2026-09-28
+
 ### Added
 
+- `game.chat` — `Available`, `Get`, `Send`, `SendFmt` for in-game chat lines through
+  `SBZChatInGame:SendChatMessageToServer` (server path; works solo/as host), plus the
+  `DT_ChatRichTextStyles` tag/colour reference in the README and knowledge base.
 - `game.attributes` — live `FGameplayAttributeData` reads (`Values`, `Current`, `Base`) with
   plain-number passthrough and nil-safe missing fields, plus a build-tagged `Layout` constant
   for raw-memory/debugger work (FGameplayAttributeData = 16 bytes, Base @ +8, Current @ +12 on

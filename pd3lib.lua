@@ -89,6 +89,7 @@ pd3.game = {
     loadout = require("pd3lib.game.loadout"),
     spawn = require("pd3lib.game.spawn"),
     ai = require("pd3lib.game.ai"),
+    chat = require("pd3lib.game.chat"),
 }
 
 pd3.selftest = require("pd3lib.selftest")

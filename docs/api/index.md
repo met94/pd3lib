@@ -7,6 +7,7 @@
 - [class Attributes](types/pd3.Attributes.md)
 - [class Callbacks](types/pd3.Heist.Callbacks.md)
 - [class Challenge](types/pd3.Challenge.md)
+- [class Chat](types/pd3.Chat.md)
 - [class Check](types/pd3.SelfTest.Check.md)
 - [class Classes](types/pd3.Classes.md)
 - [class Core](types/pd3.Core.md)
@@ -54,6 +55,7 @@
 - [game.ai](modules/game.ai.md)
 - [game.attributes](modules/game.attributes.md)
 - [game.challenge](modules/game.challenge.md)
+- [game.chat](modules/game.chat.md)
 - [game.entities](modules/game.entities.md)
 - [game.heist](modules/game.heist.md)
 - [game.interact](modules/game.interact.md)
@@ -66,4 +68,21 @@
 - [init](modules/init.md)
 - [pd3lib](modules/pd3lib.md)
 - [selftest](modules/selftest.md)
+- [tests.ai_test](modules/tests.ai_test.md)
+- [tests.classes_test](modules/tests.classes_test.md)
+- [tests.mission_test](modules/tests.mission_test.md)
+- [tests.safe_test](modules/tests.safe_test.md)
+- [tests.spawn_test](modules/tests.spawn_test.md)
+- [tests.weapons_test](modules/tests.weapons_test.md)
+- [tests.world_test](modules/tests.world_test.md)
+
+
+
+
+## Globals
+- [FName](globals/FName.md)
+- [IsValid](globals/IsValid.md)
+- [IsValid](globals/IsValid.md)
+- [IsValid](globals/IsValid.md)
+
 

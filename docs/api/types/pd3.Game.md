@@ -309,4 +309,19 @@ Game.ai : pd3.AI {
 
 
 
+### Game.chat
+---
+```lua
+Game.chat : unknown
+```
+
+
+
+
+
+
+
+
+
+
 

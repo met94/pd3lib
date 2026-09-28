@@ -342,6 +342,21 @@ Direct actor spawning for test rigs and training areas (game thread only).
 - **Hard rule**: never register a UE4SS hook on `SetAIEnabled` in a mod that calls it — calling a
   hooked UFunction re-enters the hook and crashes
 
+### game.chat
+- `Available()` — true when `SBZChatInGame` exists in the level
+- `Get()` — the live `SBZChatInGame` instance (or nil)
+- `Send(text)` -> `ok, err` — one chat line through
+  `SBZChatInGame:SendChatMessageToServer({PlayerState=…, Message=…})`
+- `SendFmt(fmt, …)` — `string.format` wrapper over `Send`
+- Works **solo / as host**: the server path executes locally and the message is multicasted back
+  into the local feed (field-proven in solo; client-role multiplayer untested). Messages are not
+  truncated — keep lines short.
+- The feed renders the game's `DT_ChatRichTextStyles` rich-text tags: `default` (white 85%),
+  `PlayerName` (light mint), `Object` / `Callout` (amber, outlined), `Good` (green),
+  `Bad` / `Hostile` (red), `Hud_01` (light green), `Blue`, `Skills1` (orange, 15 pt),
+  `StatDescription` (yellow), `Skill`, `Notation` (white, outlined). Example:
+  `pd3.chat.Send("<Good>done</>")`
+
 ## Multi-mod use
 
 pd3lib is designed to be loaded by several mods at once:

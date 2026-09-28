@@ -147,6 +147,8 @@ pd3lib.game : pd3.Game {
     loadout: pd3.Loadout,
     spawn: pd3.Spawn,
     ai: pd3.AI,
+    chat: unknown,
+    ...(+0)
 }
 ```
 
